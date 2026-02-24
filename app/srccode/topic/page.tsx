@@ -1,10 +1,32 @@
-"use client"
+"use client"; // Next.js 13 appディレクトリの場合
 
-import Link from "next/link"
-import { useState } from "react"
+import { useState } from "react";
+// import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+// import { GoogleAuthProvider } from "firebase/auth";
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, reload } from "firebase/auth";
 
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { sign } from "crypto";
+// import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
+  authDomain: "share-info-project.firebaseapp.com",
+  projectId: "share-info-project",
+  storageBucket: "share-info-project.firebasestorage.app",
+  messagingSenderId: "10017220780",
+  appId: "1:10017220780:web:4820d384929f2d84735709",
+  measurementId: "G-42VYEZ51GF"
+};
+
+const app = initializeApp(firebaseConfig);
+
 export default function Main() {
+
+
   
   const [topicName, setTopicName] = useState("");
   const [topicContent, setTopicContent] = useState("");
@@ -32,7 +54,14 @@ export default function Main() {
   return (
     <div>
       <h2>トピックの作成はこちら</h2>
-        <form  className="signup" method="POST">
+        {/* <form  className="signup" method="POST"> */}
+        <form
+            className="signup"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              await sendinfo();
+            }}
+          >
           <input
             type="text"
             name="topicname"
@@ -47,7 +76,7 @@ export default function Main() {
             value={topicContent}
             onChange={(e)=>setTopicContent(e.target.value)}
           />
-        <button onClick={sendinfo}>トピックの作成</button>
+        <button type="submit">トピックの作成</button>
       </form>
     </div>
   )
