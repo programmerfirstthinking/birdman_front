@@ -26,6 +26,21 @@ const app = initializeApp(firebaseConfig);
 
 export default function Main() {
 
+  async function fetchtopicdata() {
+    await fetch("http://localhost:8080/topics", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then((response) => response.json())
+    .then((data) => {
+      console.log("トピックデータの取得に成功");
+      console.log(data);  
+    });
+  }
+
+  fetchtopicdata();
+
 
   
   const [topicName, setTopicName] = useState("");
