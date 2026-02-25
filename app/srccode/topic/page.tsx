@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 // import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 // import { GoogleAuthProvider } from "firebase/auth";
-import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, reload } from "firebase/auth";
+import { getAuth,onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, reload } from "firebase/auth";
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
@@ -25,35 +25,48 @@ const app = initializeApp(firebaseConfig);
 
 export default function Main() {
 
+  // const auth = getAuth();
+  // const user = auth.currentUser;
+
   // const [fetchData, setFetchData] = useState({});
   let topicdata ;
+
+  const router = useRouter();
 
   const [data, setData] = useState<Record<string, any> | null>(null);
 
   async function fetchtopicdata() {
-    await fetch("http://localhost:8080/topics", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).then((response) => response.json())
-    //   console.log("トピックデータの取得に成功"), 
-    //   console.log(response)
-    
-    // });
-    .then((data) => {
+    try {
+      const response = await fetch("http://localhost:8080/topics", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      // HTTPステータスチェック
+      if (!response.ok) {
+        console.error(`HTTPエラー: ${response.status} ${response.statusText}`);
+        return;
+      }
+
       console.log("トピックデータの取得に成功");
-      console.log(data);
-      // topicdata = data;
-      // console.log(topicdata);
-      // setFetchData(data);
-      setData(data);
-    });
+      console.log(response);
+
+      const result = await response.json();
+      console.log("取得したトピックデータをjsonに変換");
+      console.log(result);
+
+      setData(result);
+
+    } catch (error) {
+      console.error("トピックデータの取得中にエラーが発生しました:", error);
+    }
   }
 
   useEffect(() => {
-  fetchtopicdata();
-}, []);
+      fetchtopicdata();
+  }, []);
 
 
 
@@ -61,26 +74,51 @@ export default function Main() {
   const [topicContent, setTopicContent] = useState("");
 
   async function sendinfo() {
+    try {
+      // 現在のユーザーのトークンを取得
 
-      // 現在のユーザーのトークンを取得している
-      //　ログインしているかをチェック
       const auth = getAuth();
       const user = auth.currentUser;
+      
+      
 
-      const idToken = await user?.getIdToken();
+      if (!user) {
+        console.error("ユーザーがログインしていません");
+        return;
+      }
 
-      // GlobalIdToken = idToken;
+      const idToken = await user.getIdToken();
+      console.log("現在のユーザーのIDトークン:", idToken);
 
-      await fetch("http://localhost:8080/topiccontent", {
+      // POST リクエスト送信
+      const response = await fetch("http://localhost:8080/topiccontent", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name: topicName, content: topicContent,token:idToken }),
-    });
+        body: JSON.stringify({ name: topicName, content: topicContent, token: idToken }),
+      });
+
+      // HTTP ステータスチェック
+      if (!response.ok) {
+        console.error(`HTTPエラー: ${response.status} ${response.statusText}`);
+        return;
+      }
+
+      // レスポンスを JSON として取得
+      const data = await response.json();
+      console.log("トピックの送信に成功");
+      console.log(data);
+
+      // 必要であればページリロード
+      // window.location.reload();
+
+    } catch (error) {
+      // トークン取得や fetch エラーをキャッチ
+      console.error("送信中にエラーが発生しました:", error);
+    }
   }
 
- 
 
   return (
     <div>
