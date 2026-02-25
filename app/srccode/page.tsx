@@ -9,6 +9,11 @@ import Link from "next/link"
 // }
 
 export default function Main() {
+
+  
+
+
+
   return (
     <div>
       <h1>ログインページ</h1>
