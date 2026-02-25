@@ -85,7 +85,7 @@ export default function Signup() {
       .then((result) => {
         const user = result.user;
         console.log("Googleサインイン成功:", user);
-        alert("Googleでのサインインに成功しました！");
+        alert("Googleでのサインインに成功しました");
       })
       .catch((error) => {
         console.error(error);
@@ -139,8 +139,6 @@ export default function Signup() {
               },
               body: JSON.stringify({ idToken }),
 
-              
-              
             });
 
             console.log("グローバル:", GlobalIdToken);

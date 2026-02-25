@@ -29,11 +29,26 @@ export default function Main() {
   const user = auth.currentUser;
 
   // const [fetchData, setFetchData] = useState({});
-  let topicdata ;
+  // let topicdata ;
 
   const router = useRouter();
 
-  const [data, setData] = useState<Record<string, any> | null>(null);
+  // const [data, setData] = useState<Record<string, any> | null>(null);
+  // const [results, setResults] = useState<Record<string, any> | null>(null);
+
+  type Topic = {
+    ID: number;
+    Year: number;
+    UserID: number;
+    TopicName: string;
+    Content: string;
+    Activate: boolean;
+    Alert: boolean;
+    CreatedAt: string;  // time.Time → stringで来る
+    UpdatedAt: string;
+  };
+
+const [results, setResults] = useState<Topic[]>([]);
 
   async function fetchtopicdata() {
     try {
@@ -53,11 +68,18 @@ export default function Main() {
       console.log("トピックデータの取得に成功");
       console.log(response);
 
-      const result = await response.json();
-      console.log("取得したトピックデータをjsonに変換");
-      console.log(result);
+      // const result = await response.json();
+      // console.log("取得したトピックデータをjsonに変換");
+      // console.log(result);
 
-      setData(result);
+      const result = await response.json();
+      setResults(result.topics); // ←ここ重要
+
+      // setData(result);
+      // setResults(result);
+
+      console.log("データの一部を取り出し");
+      console.log(result.topics[0]);
 
     } catch (error) {
       console.error("トピックデータの取得中にエラーが発生しました:", error);
@@ -79,8 +101,7 @@ export default function Main() {
 
       const auth = getAuth();
       const user = auth.currentUser;
-      
-      
+
 
       if (!user) {
         console.error("ユーザーがログインしていません");
@@ -119,6 +140,11 @@ export default function Main() {
     }
   }
 
+  function road_to_topic(id : String) {
+
+    router.push('/srccode/topiccontents/' + id);
+  }
+
 
   return (
     <div>
@@ -152,18 +178,55 @@ export default function Main() {
       <div>
       {/* <button onClick={fetchData}>取得</button> */}
 
-      {data && (
+
         <div>
-          {Object.entries(data).map(([key, value]) => (
+          <div>テスと</div>
+          {/* {Object.entries(data).map(([key, value]) => (
             <div key={key}>
               <strong>{key}:</strong>{" "}
               {typeof value === "object"
                 ? JSON.stringify(value)
                 : String(value)}
             </div>
-          ))}
+          ))} */}
+          {/* {results.map((topic) => (
+            <div key={topic.id}>
+              <h3>{topic.name}</h3>
+              <p>{topic.content}</p>
+            </div>
+          ))} */}
+          <div>
+  <h2>トピック一覧</h2>
+
+            {results.length === 0 ? (
+              <p>まだ投稿がありません</p>
+            ) : (
+              results.map((topic) => (
+                <div
+                  key={topic.ID}
+                  style={{
+                    border: "1px solid gray",
+                    margin: "10px",
+                    padding: "10px",
+                  }}
+                >
+                  <button className={String(topic.ID)} onClick={() => road_to_topic(String(topic.ID))}>
+                    <h3>{topic.TopicName}</h3>
+                    <p>{topic.Content}</p>
+
+                    <small>作成者ID: {topic.UserID}</small>
+                    <br />
+                    <small>
+                      作成日: {new Date(topic.CreatedAt).toLocaleString()}
+                    </small>
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
-      )}
+        </div>
+      <div>
     </div>
     </div>
   )
