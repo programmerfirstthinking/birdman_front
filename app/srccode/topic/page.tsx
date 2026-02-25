@@ -25,8 +25,8 @@ const app = initializeApp(firebaseConfig);
 
 export default function Main() {
 
-  // const auth = getAuth();
-  // const user = auth.currentUser;
+  const auth = getAuth();
+  const user = auth.currentUser;
 
   // const [fetchData, setFetchData] = useState({});
   let topicdata ;
@@ -111,7 +111,7 @@ export default function Main() {
       console.log(data);
 
       // 必要であればページリロード
-      // window.location.reload();
+      window.location.reload();
 
     } catch (error) {
       // トークン取得や fetch エラーをキャッチ
