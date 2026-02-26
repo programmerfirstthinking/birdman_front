@@ -493,24 +493,68 @@ export default function CreateGroup() {
 
   // ページ初回レンダリングで全グループ取得
 // ページ初回レンダリングで全グループ取得
+  // useEffect(() => {
+  //   const fetchGroups = async () => {
+  //     if (!schoolId) return; // schoolId がまだない場合は何もしない
+  //     try {
+  //       setFetchingGroups(true);
+
+  //       const res = await fetch("http://localhost:8080/getgroups", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ groupID: schoolId }), // ここで schoolId を JSON として送信
+  //       });
+
+  //       if (!res.ok) throw new Error("グループ取得に失敗しました");
+
+  //       const data = await res.json();
+  //       setGroups(data.all_groups || []);
+  //     } catch (err: any) {
+  //       console.error(err);
+  //       alert(`グループ取得エラー: ${err.message}`);
+  //     } finally {
+  //       setFetchingGroups(false);
+  //     }
+  //   };
+
+  //   fetchGroups();
+  // }, [schoolId]); // schoolId が取得できたら実行
+
   useEffect(() => {
     const fetchGroups = async () => {
-      if (!schoolId) return; // schoolId がまだない場合は何もしない
+      if (!schoolId) {
+        console.log("schoolId がまだ取得できていません");
+        return; // schoolId がまだない場合は何もしない
+      }
+
+      console.log("fetchGroups 実行開始, schoolId:", schoolId);
+
       try {
         setFetchingGroups(true);
 
         const res = await fetch("http://localhost:8080/getgroups", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ groupID: schoolId }), // ここで schoolId を JSON として送信
+          body: JSON.stringify({ groupID: schoolId }), // schoolId を JSON として送信
         });
 
-        if (!res.ok) throw new Error("グループ取得に失敗しました");
+        if (!res.ok) {
+          console.error("HTTP エラー:", res.status, res.statusText);
+          throw new Error("グループ取得に失敗しました");
+        }
 
         const data = await res.json();
+        console.log("サーバーから返ってきたデータ:", data);
+
+        if (!data.all_groups) {
+          console.warn("all_groups プロパティが存在しません:", data);
+        } else {
+          console.log("取得した all_groups:", data.all_groups);
+        }
+
         setGroups(data.all_groups || []);
       } catch (err: any) {
-        console.error(err);
+        console.error("fetchGroups 内でエラー発生:", err);
         alert(`グループ取得エラー: ${err.message}`);
       } finally {
         setFetchingGroups(false);
@@ -518,7 +562,7 @@ export default function CreateGroup() {
     };
 
     fetchGroups();
-  }, [schoolId]); // schoolId が取得できたら実行
+  }, [schoolId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -567,6 +611,7 @@ export default function CreateGroup() {
         body: JSON.stringify({ groupID: schoolId }), // schoolId を JSON で送信
       });
       const groupsData = await groupsRes.json();
+      console.log("バックエンドから返ってきたデータ:", groupsData.all_groups); // ← ここで確認
       setGroups(groupsData.all_groups || []);
 
       setGroupName("");
@@ -596,7 +641,7 @@ export default function CreateGroup() {
 
   return (
     <div style={{ padding: "16px" }}>
-      <h2>グループ作成</h2>
+      {/* <h2>グループ作成</h2>
 
       {!currentUser && (
         <button onClick={signInWithGoogle} style={{ marginBottom: "16px" }}>
@@ -637,45 +682,29 @@ export default function CreateGroup() {
       ) : groups.length === 0 ? (
         <p>まだグループはありません</p>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
+        <ul>
           {groups.map((g) => (
-            <li
-              key={g.ID}
-              style={{
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-                padding: "16px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                backgroundColor: "#f9f9f9",
-                width: "100%",
-                maxWidth: "600px",
-              }}
-            >
-              <div>
-                <p style={{ margin: "4px 0" }}>グループID: {g.ID}</p>
-                <p style={{ margin: "4px 0" }}>ユーザーID: {g.UserID}</p>
-                <p style={{ margin: "4px 0" }}>学校ID: {g.SchoolID}</p>
-                <p style={{ margin: "4px 0" }}>作成日時: {new Date(g.CreatedAt).toLocaleString()}</p>
-              </div>
-              <button
-                style={{
-                  padding: "8px 12px",
-                  backgroundColor: "#2196F3",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-                onClick={() => goToGroupTopic(g.ID)}
-              >
-                トピックを作る
-              </button>
+            <li key={g.group.ID}>
+              <p>グループID: {g.group.ID}</p>
+              <p>ユーザーID: {g.group.UserID}</p>
+              <p>学校ID: {g.group.SchoolID}</p>
+              <p>作成日時: {new Date(g.group.CreatedAt).toLocaleString()}</p>
+
+              {g.contents.length > 0 ? (
+                <ul>
+                  {g.contents.map((c) => (
+                    <li key={c.ID}>
+                      <strong>コンテンツ:</strong> {c.Content}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>コンテンツはありません</p>
+              )}
             </li>
           ))}
         </ul>
-      )}
+      )} */}
     </div>
   );
 }
