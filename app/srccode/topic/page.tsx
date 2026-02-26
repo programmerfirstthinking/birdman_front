@@ -78,8 +78,8 @@ const [results, setResults] = useState<Topic[]>([]);
       // setData(result);
       // setResults(result);
 
-      console.log("データの一部を取り出し");
-      console.log(result.topics[0]);
+      // console.log("データの一部を取り出し");
+      // console.log(result.topics[0]);
 
     } catch (error) {
       console.error("トピックデータの取得中にエラーが発生しました:", error);

@@ -22,17 +22,17 @@ export default function Page() {
   const id = params.id;
 
 
-    type Topic = {
-      ID: number;
-      Year: number;
-      UserID: number;
-      TopicName: string;
-      Content: string;
-      Activate: boolean;
-      Alert: boolean;
-      CreatedAt: string;  // time.Time → stringで来る
-      UpdatedAt: string;
-    };
+  type Topic = {
+    ID: number;
+    Year: number;
+    UserID: number;
+    TopicName: string;
+    Content: string;
+    Activate: boolean;
+    Alert: boolean;
+    CreatedAt: string;  // time.Time → stringで来る
+    UpdatedAt: string;
+  };
   
   const [results, setResults] = useState<Topic>();
   const [topic_comment, setTopicComment] = useState("");
