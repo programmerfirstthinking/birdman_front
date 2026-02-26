@@ -19,7 +19,7 @@ export default function SchoolsPage() {
 
   return (
     <div>
-      <h2>グループ作成画面</h2>
+      <h2>トピック作成画面</h2>
 
 
         
