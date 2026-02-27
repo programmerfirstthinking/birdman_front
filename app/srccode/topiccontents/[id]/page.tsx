@@ -21,6 +21,24 @@ export default function Page() {
   const params = useParams();
   const id = params.id;
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+
+  type CurrentUser = {
+    id: number;
+    name: string;
+  };
+
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+
+  type UserInfo = {
+  id: number;
+  name: string;
+  };
+
+  const [users, setUsers] = useState<UserInfo[]>([]);
+
 
   type Topic = {
     ID: number;
@@ -49,32 +67,116 @@ const [comments, setComments] = useState<Comment[]>([]);
 
   const app = initializeApp(firebaseConfig);
 
-  function GetTopicdata(id: ParamValue) {
-    fetch(`http://localhost:8080/topic_comment_only/${id}`, {
-      method: "GET",
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("取得失敗");
+  // function GetTopicdata(id: ParamValue) {
+  //   fetch(`http://localhost:8080/topic_comment_only/${id}`, {
+  //     method: "GET",
+  //   })
+  //     .then((response) => {
+  //       if (!response.ok) {
+  //         throw new Error("取得失敗");
+  //       }
+  //       return response.json();
+  //     })
+  //     .then((data) => {
+  //       console.log("取得成功:", data.comments);
+  //       setComments(data.comments);
+  //     })
+  //     .catch((error) => {
+  //       console.error(error);
+  //     });
+  // }
+
+    //   function GetTopicdata(id: ParamValue) {
+    //   fetch(`http://localhost:8080/topic_comment_only/${id}`, {
+    //     method: "GET",
+    //   })
+    //     .then((response) => {
+    //       if (!response.ok) {
+    //         throw new Error("取得失敗");
+    //       }
+    //       return response.json();
+    //     })
+    //     .then((data) => {
+    //       console.log("コメントの取得成功:", data.comments);
+    //       console.log("トピック情報の取得成功:", data.topicinfo);
+    //       console.log("IDとnameリスト", data.users);
+
+    //       setComments(data.comments);
+    //       setResults(data.topicinfo);
+    //       setUsers(data.users); // ← 追加
+    //     })
+    //     .catch((error) => {
+    //       console.error(error);
+    //     });
+    // }
+
+    // import { getAuth } from "firebase/auth";
+
+    async function GetTopicdata(id: ParamValue) {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        if (!user) {
+          console.error("ユーザーがログインしていません");
+          return;
         }
-        return response.json();
-      })
-      .then((data) => {
-        console.log("取得成功:", data.comments);
+
+        const idToken = await user.getIdToken();
+        console.log("現在のユーザーのIDトークン:", idToken);
+
+        const response = await fetch(
+          `http://localhost:8080/topic_comment_only/${id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${idToken}`,  // ← ここが重要
+            },
+          }
+        );
+
+        if (!response.ok) {
+          console.error(`HTTPエラー: ${response.status} ${response.statusText}`);
+          return;
+        }
+
+        const data = await response.json();
+
         setComments(data.comments);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }
+        setResults(data.topicinfo);
+        setUsers(data.users);
+        setCurrentUser(data.currentuser); // ← 追加
 
+        setComments(data.comments);
+        setResults(data.topicinfo);
+        setUsers(data.users);
 
-
-    useEffect(() => {
-      if (id) {
-        GetTopicdata(id);
+      } catch (error) {
+        console.error("エラー:", error);
       }
-    }, [id]);
+    }
+
+    function getUserName(userID: number) {
+      const user = users.find((u) => u.id === userID);
+      return user ? user.name : "不明なユーザー";
+    }
+
+
+
+  useEffect(() => {
+    const auth = getAuth();
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && id) {
+        GetTopicdata(id);  // ← ログイン確定後に呼ぶ
+      } else {
+        console.log("ログインしていません");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [id]);
 
   async function sendinfo() {
 
@@ -115,36 +217,98 @@ const [comments, setComments] = useState<Comment[]>([]);
 
       setComments(data.comments);
 
-
-
-
   }
-
-
 
   return (
     <div>
-      <h1>URLの最後</h1>
-      <h2>トピックの内容</h2>
+      {/* <h1>URLの最後</h1> */}
+      {/* <h2>トピックの内容</h2> */}
       <div>
-        <p>{id}</p>
-        <div>{results?.ID}</div>
-        <div>{results?.TopicName}</div>
-        <div>{results?.Content}</div>
+        <h4>トピック題名</h4>
 
+        {isEditing ? (
+          <input
+            type="text"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+          />
+        ) : (
+          <div>{results?.TopicName}</div>
+        )}
+
+        <h4>トピック内容</h4>
+
+        {isEditing ? (
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+          />
+        ) : (
+          <div>{results?.Content}</div>
+        )}
+
+        {/* 編集ボタン */}
+        {currentUser && results?.UserID === currentUser.id && !isEditing && (
+          <button
+            onClick={() => {
+              setIsEditing(true);
+              setEditTitle(results?.TopicName || "");
+              setEditContent(results?.Content || "");
+            }}
+          >
+            削除または編集
+          </button>
+        )}
+
+        {/* 保存ボタン（編集時のみ） */}
+        {isEditing && (
+          <button
+            onClick={async () => {
+              const auth = getAuth();
+              const user = auth.currentUser;
+              if (!user) return;
+
+              const idToken = await user.getIdToken();
+
+              await fetch("http://localhost:8080/edit_topic", {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  topicId: Number(id), // ← ここ重要
+                  title: editTitle,
+                  content: editContent,
+                  token: idToken,
+                }),
+              });
+
+              setIsEditing(false);
+              GetTopicdata(id); // 再取得
+            }}
+          >
+            保存
+          </button>
+        )}
       </div>
 
+
       <div>
+      <h2>コメント一覧</h2>
+      {comments?.map((comment) => (
+        <div key={comment.ID}>
+          <p>{comment.Content}</p>
+          <p>ユーザー名: {getUserName(comment.UserID)}</p>
+          <p>作成日時: {comment.CreatedAt}</p>
 
-
-        <h2>コメント一覧</h2>
-        {comments?.map((comment) => (
-          <div key={comment.ID}>
-            <p>{comment.Content}</p>
-            <p>ユーザーID: {comment.UserID}</p>
-            <p>作成日時: {comment.CreatedAt}</p>
-          </div>
-        ))}
+          {/* 🔥 自分のコメントなら削除ボタン表示 */}
+          {currentUser && comment.UserID === currentUser.id && (
+            <button >
+              削除
+            </button>
+          )}
+        </div>
+      ))}
       </div>
       <div>
         <h3>トピックに対するコメントをしましょう</h3>
