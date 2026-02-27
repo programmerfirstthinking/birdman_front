@@ -21,6 +21,9 @@ export default function Page() {
   const params = useParams();
   const id = params.id;
 
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editCommentContent, setEditCommentContent] = useState("");
+
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
@@ -292,23 +295,71 @@ const [comments, setComments] = useState<Comment[]>([]);
         )}
       </div>
 
+<div>
+  <h2>コメント一覧</h2>
 
-      <div>
-      <h2>コメント一覧</h2>
-      {comments?.map((comment) => (
-        <div key={comment.ID}>
-          <p>{comment.Content}</p>
-          <p>ユーザー名: {getUserName(comment.UserID)}</p>
-          <p>作成日時: {comment.CreatedAt}</p>
+  {comments?.map((comment) => (
+      <div key={comment.ID}>
+        
+            {editingCommentId === comment.ID ? (
+              <>
+                <textarea
+                  value={editCommentContent}
+                  onChange={(e) => setEditCommentContent(e.target.value)}
+                />
 
-          {/* 🔥 自分のコメントなら削除ボタン表示 */}
-          {currentUser && comment.UserID === currentUser.id && (
-            <button >
-              削除
-            </button>
-          )}
-        </div>
-      ))}
+                <button
+                  onClick={async () => {
+                    const auth = getAuth();
+                    const user = auth.currentUser;
+                    if (!user) return;
+
+                    const idToken = await user.getIdToken();
+
+                    await fetch("http://localhost:8080/edit_topic_comment", {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        commentId: comment.ID,
+                        content: editCommentContent,
+                        token: idToken,
+                      }),
+                    });
+
+                    setEditingCommentId(null);
+                    GetTopicdata(id);
+                  }}
+                >
+                  保存
+                </button>
+
+                <button onClick={() => setEditingCommentId(null)}>
+                  キャンセル
+                </button>
+              </>
+            ) : (
+              <>
+                <p>{comment.Content}</p>
+                <p>ユーザー名: {getUserName(comment.UserID)}</p>
+                <p>作成日時: {comment.CreatedAt}</p>
+
+                {currentUser && comment.UserID === currentUser.id && (
+                  <button
+                    onClick={() => {
+                      setEditingCommentId(comment.ID);
+                      setEditCommentContent(comment.Content);
+                    }}
+                  >
+                    編集
+                  </button>
+                )}
+              </>
+            )}
+
+          </div>
+        ))}
       </div>
       <div>
         <h3>トピックに対するコメントをしましょう</h3>
