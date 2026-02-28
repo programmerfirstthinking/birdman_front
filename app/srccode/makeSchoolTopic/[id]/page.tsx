@@ -826,11 +826,12 @@ const MarkdownImageUploader: React.FC = () => {
         {sending ? "送信中..." : "送信"}
       </button>
 
-      <h3>プレビューです</h3>
+      <h3>プレビューですよ</h3>
       <div style={{ border: "1px solid #ccc", padding: "10px" }}>
         {markdown.split("\n").map((line, idx) => {
-          const imgMatch = line.match(/!\[.*\]\((.*)\)/);
-          if (imgMatch)
+          // 画像判定
+          const imgMatch = line.match(/!\[.*\]\((.*\.(png|jpg|jpeg|gif))\)/i);
+          if (imgMatch) {
             return (
               <img
                 key={idx}
@@ -839,6 +840,50 @@ const MarkdownImageUploader: React.FC = () => {
                 style={{ maxWidth: "200px", marginBottom: "10px" }}
               />
             );
+          }
+
+          // PDF 判定 ![name.pdf](url.pdf) または [name.pdf](url.pdf)
+          const pdfMatch = line.match(/!\[(.*\.pdf)\]\((.*\.pdf)\)/i) || line.match(/\[(.*\.pdf)\]\((.*\.pdf)\)/i);
+          if (pdfMatch) {
+            const name = pdfMatch[1] || `PDF ${idx + 1}`;
+            const url = pdfMatch[2];
+            return (
+              <div
+                key={idx}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  border: "1px solid #ccc",
+                  padding: "8px",
+                  marginBottom: "10px",
+                  backgroundColor: "#f0f0f0",
+                  borderRadius: "4px",
+                }}
+              >
+                <span style={{ fontSize: "24px" }}>📄</span>
+                <span style={{ flex: 1 }}>{name}</span>
+                <a
+                  href={url}
+                  download={name}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    backgroundColor: "#0070f3",
+                    color: "#fff",
+                    padding: "4px 8px",
+                    borderRadius: "4px",
+                    textDecoration: "none",
+                    fontSize: "14px",
+                  }}
+                >
+                  ダウンロード
+                </a>
+              </div>
+            );
+          }
+
+          // 通常テキスト
           return <p key={idx}>{line}</p>;
         })}
       </div>
