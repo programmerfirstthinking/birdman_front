@@ -712,6 +712,9 @@ const MarkdownImageUploader: React.FC = () => {
   const [groupId, setGroupId] = useState<number | null>(null);
   const [contentName, setContentName] = useState<string>(""); // 新しいフォーム用
 
+  const [pdfUrl, setPdfUrl] = useState<string>("");
+  const [uploadingPdf, setUploadingPdf] = useState<boolean>(false);
+
   // URLから groupId を取得
   useEffect(() => {
     const pathParts = window.location.pathname.split("/").filter(Boolean);
@@ -750,50 +753,111 @@ const MarkdownImageUploader: React.FC = () => {
     e.stopPropagation();
   };
 
-  // 送信処理
-  const handleSend = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      alert("ログインが必要です");
-      return;
-    }
-    if (!groupId) {
-      alert("groupId が取得できませんでした");
-      return;
-    }
-    if (!contentName.trim()) {
-      alert("コンテンツ名を入力してください");
-      return;
-    }
+  const handlePdfUpload = async (file: File) => {
+  if (file.type !== "application/pdf") {
+    alert("PDFファイルのみアップロード可能です。");
+    return;
+  }
 
-    setSending(true);
+  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+  if (file.size > MAX_SIZE) {
+    alert("PDFは10MB以下にしてください。");
+    return;
+  }
 
-    try {
-      const payload = {
-        uid: user.uid,
-        groupId,
-        contentName, // 新規追加
-        content: markdown,
-      };
+  try {
+    setUploadingPdf(true);
 
-      const response = await fetch("http://localhost:8080/make_grouptopic", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    const storageRef = ref(
+      storage,
+      `pdfs/${Date.now()}_${file.name}`
+    );
 
-      if (!response.ok) throw new Error(`送信に失敗: ${response.status}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
 
-      alert("送信成功！");
-      setMarkdown("");
-      setContentName(""); // フォームもリセット
+    setPdfUrl(url);
+    alert("PDFアップロード成功！");
     } catch (err) {
       console.error(err);
-      alert("送信中にエラーが発生しました");
+      alert("PDFアップロードに失敗しました");
     } finally {
-      setSending(false);
+      setUploadingPdf(false);
     }
+
   };
+
+
+    const handlePdfDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+
+    const file = e.dataTransfer.files[0];
+    await handlePdfUpload(file);
+  };
+
+  const handlePdfDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+  const handlePdfSelect = async (
+      e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+      if (!e.target.files || e.target.files.length === 0) return;
+
+      const file = e.target.files[0];
+      await handlePdfUpload(file);
+    };
+
+  // 送信処理
+const handleSend = async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("ログインが必要です");
+    return;
+  }
+  if (!groupId) {
+    alert("groupId が取得できませんでした");
+    return;
+  }
+  if (!contentName.trim()) {
+    alert("コンテンツ名を入力してください");
+    return;
+  }
+
+  setSending(true);
+
+  try {
+    const payload = {
+      uid: user.uid,
+      groupId,
+      contentName,
+      content: markdown,
+      pdfUrl: pdfUrl, // ★ これを追加
+    };
+
+    const response = await fetch("http://localhost:8080/make_grouptopic", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) throw new Error(`送信に失敗: ${response.status}`);
+
+    alert("送信成功！");
+    setMarkdown("");
+    setContentName("");
+    setPdfUrl(""); // ★ リセット追加
+  } catch (err) {
+    console.error(err);
+    alert("送信中にエラーが発生しました");
+  } finally {
+    setSending(false);
+  }
+};
 
   return (
     <div className="markdownUploader">
@@ -825,6 +889,51 @@ const MarkdownImageUploader: React.FC = () => {
       >
         {sending ? "送信中..." : "送信"}
       </button>
+
+      {/* PDF専用アップロード欄 */}
+        <div
+          onDrop={handlePdfDrop}
+          onDragOver={handlePdfDragOver}
+          style={{
+            border: "2px dashed #888",
+            padding: "20px",
+            textAlign: "center",
+            marginBottom: "15px",
+            borderRadius: "8px",
+            backgroundColor: "#fafafa",
+          }}
+        >
+          <p>📄 ここにPDFをドラッグ＆ドロップ</p>
+          <p>または</p>
+          <label
+            style={{
+              backgroundColor: "#0070f3",
+              color: "#fff",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            ファイルを選択
+            <input
+              type="file"
+              accept="application/pdf"
+              style={{ display: "none" }}
+              onChange={handlePdfSelect}
+            />
+          </label>
+
+          {uploadingPdf && <p>アップロード中...</p>}
+
+          {pdfUrl && (
+            <div style={{ marginTop: "10px" }}>
+              <p>✅ アップロード済み</p>
+              <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+                PDFを確認する
+              </a>
+            </div>
+          )}
+        </div>
 
       <h3>プレビューですよ</h3>
       <div style={{ border: "1px solid #ccc", padding: "10px" }}>
