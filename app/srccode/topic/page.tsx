@@ -198,27 +198,23 @@ const [results, setResults] = useState<Topic[]>([]);
           <div>
   <h2>トピック一覧</h2>
 
-            {results.length === 0 ? (
+            {(!results || results.length === 0) ? (
               <p>まだ投稿がありません</p>
             ) : (
               results.map((topic) => (
                 <div
                   key={topic.ID}
-                  style={{
-                    border: "1px solid gray",
-                    margin: "10px",
-                    padding: "10px",
-                  }}
+                  style={{ border: "1px solid gray", margin: "10px", padding: "10px" }}
                 >
-                  <button className={String(topic.ID)} onClick={() => road_to_topic(String(topic.ID))}>
+                  <button
+                    className={String(topic.ID)}
+                    onClick={() => road_to_topic(String(topic.ID))}
+                  >
                     <h3>{topic.TopicName}</h3>
                     <p>{topic.Content}</p>
-
                     <small>作成者ID: {topic.UserID}</small>
                     <br />
-                    <small>
-                      作成日: {new Date(topic.CreatedAt).toLocaleString()}
-                    </small>
+                    <small>作成日: {new Date(topic.CreatedAt).toLocaleString()}</small>
                   </button>
                 </div>
               ))
