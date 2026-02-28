@@ -60,6 +60,7 @@ export default function CreateGroup() {
   const [fetchingGroups, setFetchingGroups] = useState(true);
   const [schoolId, setSchoolId] = useState<number | null>(null);
   const [contentInputs, setContentInputs] = useState<{ [groupId: number]: { name: string; content: string } }>({});
+  const [backendSchoolId, setBackendSchoolId] = useState<number | null>(null);
 
   const auth = getAuth();
   const router = useRouter();
@@ -98,11 +99,15 @@ export default function CreateGroup() {
         }),
       });
 
-    const data = await res.json();
+      const data = await res.json();
       if (!data.all_groups) {
         setGroups([]);
+        setBackendSchoolId(data.schoolID || null);
         return;
       }
+
+      setBackendSchoolId(data.schoolID || null);
+
       const groupedData: GroupItem[] = data.all_groups.map((g: any) => ({
         id: g.group.ID,
         userId: g.group.UserID,
@@ -113,7 +118,7 @@ export default function CreateGroup() {
           ? g.contents.map((c: any) => ({
               id: c.ID,
               content: c.Content,
-              contentName: c.GroupContentsName, // 名前を取得
+              contentName: c.GroupContentsName,
               userId: c.UserID
             }))
           : []
@@ -201,8 +206,35 @@ export default function CreateGroup() {
           Googleでログイン
         </button>
       )}
-
+{/* 
       {currentUser && (
+        <form onSubmit={handleSubmitGroup} style={{ marginBottom: "32px" }}>
+          <input
+            type="text"
+            placeholder="グループ名を入力"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            required
+            style={{ padding: "8px", marginRight: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#4CAF50",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
+          >
+            {loading ? "作成中..." : "グループを作成"}
+          </button>
+        </form>
+      )} */}
+
+      {currentUser && backendSchoolId === schoolId && (
         <form onSubmit={handleSubmitGroup} style={{ marginBottom: "32px" }}>
           <input
             type="text"
@@ -229,7 +261,7 @@ export default function CreateGroup() {
         </form>
       )}
 
-      <h2>全グループ一覧よ</h2>
+      <h2>全グループ一覧ですよ</h2>
       {fetchingGroups ? (
         <p>読み込み中...</p>
       ) : groups.length === 0 ? (
@@ -294,20 +326,22 @@ export default function CreateGroup() {
                   }
                   style={{ padding: "4px", marginRight: "4px", borderRadius: "4px", border: "1px solid #ccc" }}
                 /> */}
-                <button
-                  onClick={() => handleAddContent(g.id)}
-                  disabled={loading}
-                  style={{
-                    padding: "4px 8px",
-                    backgroundColor: "#2196F3",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: loading ? "not-allowed" : "pointer"
-                  }}
-                >
-                  追加
-                </button>
+                {backendSchoolId === schoolId && (
+                  <button
+                    onClick={() => handleAddContent(g.id)}
+                    disabled={loading}
+                    style={{
+                      padding: "4px 8px",
+                      backgroundColor: "#2196F3",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: loading ? "not-allowed" : "pointer"
+                    }}
+                  >
+                    追加
+                  </button>
+                )}
               </div>
             </li>
           ))}
