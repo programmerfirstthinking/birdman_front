@@ -1419,6 +1419,7 @@ export default function CreateGroup() {
           : []
       }));
       setGroups(groupedData);
+      console.log(groupedData)
     } catch (err: any) {
       console.error("グループ取得エラー:", err);
       alert(`グループ取得エラー: ${err.message}`);
@@ -1475,16 +1476,20 @@ export default function CreateGroup() {
     router.push(`/srccode/makeSchoolTopic/${groupId}`);
   };
 
+  // const see_school_topic
+
   const signInWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       setCurrentUser(result.user);
-      alert("Googleサインイン成功！");
+      alert("Googleサインイン成功");
     } catch (err: any) {
       console.error(err);
       alert(`Googleサインインエラー: ${err.message}`);
     }
   };
+
+
 
   return (
     <div style={{ padding: "16px" }}>
@@ -1537,23 +1542,34 @@ export default function CreateGroup() {
               <p>学校ID: {g.schoolId}</p>
               <p>作成日時: {new Date(g.createdAt).toLocaleString()}</p>
               <p>テストです</p>
-
               {g.contents.length > 0 ? (
                 <ul>
                   {g.contents.map((c) => (
-                    <li key={c.id}>
-                      <strong>名前:</strong> {c.contentName} <br />
-                      <strong>本文:</strong> {c.content}
+                    <li key={c.id} style={{ marginBottom: "8px" }}>
+                      <strong>トピック:</strong> {c.contentName} <br />
+                      {/* <strong>本文:</strong> {c.content} <br /> */}
+                     <button
+                        onClick={() => router.push(`/srccode/see_school_topic/${c.id}`)}
+                        style={{
+                          padding: "2px 6px",
+                          backgroundColor: "#F44336",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        詳しくみる
+                      </button>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <p>コンテンツはありません</p>
               )}
-
               {/* コンテンツ追加フォーム */}
               <div style={{ marginTop: "8px" }}>
-                <input
+                {/* <input
                   type="text"
                   placeholder="コンテンツ名"
                   value={contentInputs[g.id]?.name || ""}
@@ -1576,7 +1592,7 @@ export default function CreateGroup() {
                     }))
                   }
                   style={{ padding: "4px", marginRight: "4px", borderRadius: "4px", border: "1px solid #ccc" }}
-                />
+                /> */}
                 <button
                   onClick={() => handleAddContent(g.id)}
                   disabled={loading}
