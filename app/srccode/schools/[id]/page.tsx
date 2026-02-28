@@ -1211,7 +1211,7 @@ export default function CreateGroup() {
 
   return (
     <div style={{ padding: "16px" }}>
-      <h2>グループ作成</h2>
+      <h2>グループ作成します</h2>
 
       {!currentUser && (
         <button onClick={signInWithGoogle} style={{ marginBottom: "16px" }}>

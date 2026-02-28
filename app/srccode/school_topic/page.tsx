@@ -1387,21 +1387,41 @@ export default function CreateGroup() {
     if (!isNaN(parsedId)) setSchoolId(parsedId);
   }, []);
 
+  type GetGroupsRequest = {
+    groupID: number;
+    idToken: string;
+  };
+
   // グループ取得
   const fetchGroups = async () => {
-    if (!schoolId) return;
+    if (!schoolId || !currentUser) return;
+
     setFetchingGroups(true);
+
     try {
+      const idToken = await currentUser.getIdToken();
+
+      const payload: GetGroupsRequest = {
+        groupID: schoolId,
+        idToken,
+      };
+
       const res = await fetch("http://localhost:8080/getgroups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ groupID: schoolId }),
+        body: JSON.stringify(payload),
       });
+
       const data = await res.json();
+
+      console.log("返ってきたuserID:", data.userID); // ← フロント側でも確認可能
+
       if (!data.all_groups) {
         setGroups([]);
         return;
       }
+
+    
       const groupedData: GroupItem[] = data.all_groups.map((g: any) => ({
         id: g.group.ID,
         userId: g.group.UserID,
@@ -1427,8 +1447,10 @@ export default function CreateGroup() {
   };
 
   useEffect(() => {
-    fetchGroups();
-  }, [schoolId]);
+    if (schoolId && currentUser) {
+      fetchGroups();
+    }
+  }, [schoolId, currentUser]);
 
   const handleSubmitGroup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1504,7 +1526,7 @@ export default function CreateGroup() {
 
   return (
     <div style={{ padding: "16px" }}>
-      <h2>グループ作成</h2>
+      <h2>グループ作成します</h2>
 
       {!currentUser && (
         <button onClick={signInWithGoogle} style={{ marginBottom: "16px" }}>
@@ -1512,8 +1534,8 @@ export default function CreateGroup() {
         </button>
       )}
 
-      {currentUser && (
-        <form onSubmit={handleSubmitGroup} style={{ marginBottom: "32px" }}>
+    {currentUser && schoolId !== null && (
+      <form onSubmit={handleSubmitGroup} style={{ marginBottom: "32px" }}>
           <input
             type="text"
             placeholder="グループ名を入力"
@@ -1555,19 +1577,20 @@ export default function CreateGroup() {
               <p>テストです</p>
 
               {g.contents.length > 0 ? (
-                <ul>
-                  {g.contents.map((c) => (
-                    <li key={c.id}>
-                      <strong>名前:</strong> {c.contentName} <br />
-                      <strong>本文:</strong> {c.content}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>コンテンツはありません</p>
-              )}
+              <ul>
+                {g.contents.map((c) => (
+                  <li key={c.id}>
+                    <strong>名前:</strong> {c.contentName} <br />
+                    <strong>本文:</strong> {c.content}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>コンテンツはありません</p>
+            )}
 
-              {/* コンテンツ追加フォーム */}
+            {/* schoolId が一致する場合のみ表示 */}
+            {schoolId === g.schoolId && (
               <div style={{ marginTop: "8px" }}>
                 <input
                   type="text"
@@ -1608,6 +1631,7 @@ export default function CreateGroup() {
                   追加
                 </button>
               </div>
+            )}
             </li>
           ))}
         </ul>
