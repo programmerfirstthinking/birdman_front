@@ -43,12 +43,22 @@ type GroupContent = {
   userId: number;
 };
 
+// type GroupItem = {
+//   id: number;
+//   userId: number;
+//   schoolId: number;
+//   createdAt: string;
+//   updatedAt: string;
+//   contents: GroupContent[];
+// };
+
 type GroupItem = {
   id: number;
   userId: number;
   schoolId: number;
   createdAt: string;
   updatedAt: string;
+  groupName: string; // 追加
   contents: GroupContent[];
 };
 
@@ -114,6 +124,7 @@ export default function CreateGroup() {
         schoolId: g.group.SchoolID,
         createdAt: g.group.CreatedAt,
         updatedAt: g.group.UpdatedAt,
+        groupName: g.group.Groupname, // ここでグループ名をセット
         contents: g.contents
           ? g.contents.map((c: any) => ({
               id: c.ID,
@@ -270,7 +281,7 @@ export default function CreateGroup() {
         <ul>
           {groups.map((g) => (
             <li key={g.id} style={{ border: "1px solid #ccc", padding: "8px", marginBottom: "8px" }}>
-              <p>グループID: {g.id}</p>
+              <p>グループ名: {g.groupName}</p>  {/* ← id から groupName に変更 */}
               <p>ユーザーID: {g.userId}</p>
               <p>学校ID: {g.schoolId}</p>
               <p>作成日時: {new Date(g.createdAt).toLocaleString()}</p>
