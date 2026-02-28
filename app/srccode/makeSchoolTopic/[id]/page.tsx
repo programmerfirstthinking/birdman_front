@@ -528,13 +528,169 @@
 // export default MarkdownImageUploader;
 
 
+// "use client";
+// import React, { useState, useEffect } from "react";
+// import { initializeApp } from "firebase/app";
+// import { getAuth } from "firebase/auth";
+// import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+// // Firebase 設定
+// const firebaseConfig = {
+//   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
+//   authDomain: "share-info-project.firebaseapp.com",
+//   projectId: "share-info-project",
+//   storageBucket: "share-info-project.firebasestorage.app",
+//   messagingSenderId: "10017220780",
+//   appId: "1:10017220780:web:4820d384929f2d84735709",
+//   measurementId: "G-42VYEZ51GF",
+// };
+
+// // Firebase 初期化
+// const app = initializeApp(firebaseConfig);
+// const storage = getStorage(app);
+// const auth = getAuth(app);
+
+// const MarkdownImageUploader: React.FC = () => {
+//   const [markdown, setMarkdown] = useState<string>("");
+//   const [sending, setSending] = useState<boolean>(false);
+//   const [groupId, setGroupId] = useState<number | null>(null);
+
+//   // URLの最後の数字を groupId にセット
+//   useEffect(() => {
+//     const pathParts = window.location.pathname.split("/").filter(Boolean);
+//     const lastPart = pathParts[pathParts.length - 1];
+//     const parsedId = parseInt(lastPart, 10);
+//     if (!isNaN(parsedId)) setGroupId(parsedId);
+//   }, []);
+
+//   const handleDrop = async (e: React.DragEvent<HTMLTextAreaElement>) => {
+//     e.preventDefault();
+//     e.stopPropagation();
+
+//     if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+
+//     const file = e.dataTransfer.files[0];
+//     const MAX_SIZE = 1024 * 1024;
+//     if (file.size > MAX_SIZE) {
+//       alert("画像は1MB以下にしてください。");
+//       return;
+//     }
+
+//     const storageRef = ref(storage, "images/" + file.name);
+
+//     try {
+//       await uploadBytes(storageRef, file);
+//       const url = await getDownloadURL(storageRef);
+//       setMarkdown((prev) => prev + `![${file.name}](${url})\n`);
+//     } catch (err) {
+//       console.error("アップロードエラー:", err);
+//       alert("アップロードに失敗しました。");
+//     }
+//   };
+
+//   const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
+//     e.preventDefault();
+//     e.stopPropagation();
+//   };
+
+//   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+//     setMarkdown(e.target.value);
+//   };
+
+//   const handleSend = async () => {
+//     const user = auth.currentUser;
+//     if (!user) {
+//       alert("ログインが必要です");
+//       return;
+//     }
+//     if (!groupId) {
+//       alert("groupId が取得できませんでした");
+//       return;
+//     }
+
+//     setSending(true);
+
+//     try {
+//       const payload = {
+//         uid: user.uid,
+//         groupId,   // URLから取得
+//         content: markdown,
+//       };
+
+//       const response = await fetch("http://localhost:8080/make_grouptopic", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify(payload),
+//       });
+
+//       if (!response.ok) throw new Error(`送信に失敗: ${response.status}`);
+
+//       alert("送信成功！");
+//       setMarkdown("");
+//     } catch (err) {
+//       console.error(err);
+//       alert("送信中にエラーが発生しました");
+//     } finally {
+//       setSending(false);
+//     }
+//   };
+
+//   return (
+//     <div className="markdownUploader">
+//       <h2>マークダウン入力欄（画像ドロップ対応）</h2>
+//       <textarea
+//         value={markdown}
+//         onChange={handleChange}
+//         onDrop={handleDrop}
+//         onDragOver={handleDragOver}
+//         placeholder="ここにテキストを書いてください。画像をドロップすると自動でマークダウンに挿入されます。"
+//         style={{ width: "100%", height: "200px", padding: "10px" }}
+//       />
+
+//       <button
+//         onClick={handleSend}
+//         disabled={sending || markdown.trim() === "" || !groupId}
+//         style={{ marginTop: "10px", padding: "8px 16px" }}
+//       >
+//         {sending ? "送信中..." : "送信"}
+//       </button>
+
+//       <h3>プレビュー</h3>
+//       <div style={{ border: "1px solid #ccc", padding: "10px" }}>
+//         {markdown.split("\n").map((line, idx) => {
+//           const imgMatch = line.match(/!\[.*\]\((.*)\)/);
+//           if (imgMatch)
+//             return (
+//               <img
+//                 key={idx}
+//                 src={imgMatch[1]}
+//                 alt=""
+//                 style={{ maxWidth: "200px", marginBottom: "10px" }}
+//               />
+//             );
+//           return <p key={idx}>{line}</p>;
+//         })}
+//       </div>
+//     </div>
+//   );
+// };
+
+
+
+// export default MarkdownImageUploader;
+
+
+
+
+
+
 "use client";
 import React, { useState, useEffect } from "react";
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// Firebase 設定
+// 🔥 Firebase 設定
 const firebaseConfig = {
   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
   authDomain: "share-info-project.firebaseapp.com",
@@ -545,17 +701,18 @@ const firebaseConfig = {
   measurementId: "G-42VYEZ51GF",
 };
 
-// Firebase 初期化
-const app = initializeApp(firebaseConfig);
-const storage = getStorage(app);
+// 🔥 Firebase 初期化（重複を避ける）
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 const MarkdownImageUploader: React.FC = () => {
   const [markdown, setMarkdown] = useState<string>("");
   const [sending, setSending] = useState<boolean>(false);
   const [groupId, setGroupId] = useState<number | null>(null);
+  const [contentName, setContentName] = useState<string>(""); // 新しいフォーム用
 
-  // URLの最後の数字を groupId にセット
+  // URLから groupId を取得
   useEffect(() => {
     const pathParts = window.location.pathname.split("/").filter(Boolean);
     const lastPart = pathParts[pathParts.length - 1];
@@ -563,10 +720,10 @@ const MarkdownImageUploader: React.FC = () => {
     if (!isNaN(parsedId)) setGroupId(parsedId);
   }, []);
 
+  // 画像ドロップ処理
   const handleDrop = async (e: React.DragEvent<HTMLTextAreaElement>) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
 
     const file = e.dataTransfer.files[0];
@@ -593,10 +750,7 @@ const MarkdownImageUploader: React.FC = () => {
     e.stopPropagation();
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMarkdown(e.target.value);
-  };
-
+  // 送信処理
   const handleSend = async () => {
     const user = auth.currentUser;
     if (!user) {
@@ -607,13 +761,18 @@ const MarkdownImageUploader: React.FC = () => {
       alert("groupId が取得できませんでした");
       return;
     }
+    if (!contentName.trim()) {
+      alert("コンテンツ名を入力してください");
+      return;
+    }
 
     setSending(true);
 
     try {
       const payload = {
         uid: user.uid,
-        groupId,   // URLから取得
+        groupId,
+        contentName, // 新規追加
         content: markdown,
       };
 
@@ -627,6 +786,7 @@ const MarkdownImageUploader: React.FC = () => {
 
       alert("送信成功！");
       setMarkdown("");
+      setContentName(""); // フォームもリセット
     } catch (err) {
       console.error(err);
       alert("送信中にエラーが発生しました");
@@ -638,9 +798,20 @@ const MarkdownImageUploader: React.FC = () => {
   return (
     <div className="markdownUploader">
       <h2>マークダウン入力欄（画像ドロップ対応）</h2>
+
+      {/* コンテンツ名フォーム */}
+      <input
+        type="text"
+        placeholder="コンテンツ名"
+        value={contentName}
+        onChange={(e) => setContentName(e.target.value)}
+        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+      />
+
+      {/* Markdown入力 */}
       <textarea
         value={markdown}
-        onChange={handleChange}
+        onChange={(e) => setMarkdown(e.target.value)}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         placeholder="ここにテキストを書いてください。画像をドロップすると自動でマークダウンに挿入されます。"
@@ -649,13 +820,13 @@ const MarkdownImageUploader: React.FC = () => {
 
       <button
         onClick={handleSend}
-        disabled={sending || markdown.trim() === "" || !groupId}
+        disabled={sending || markdown.trim() === "" || !groupId || !contentName.trim()}
         style={{ marginTop: "10px", padding: "8px 16px" }}
       >
         {sending ? "送信中..." : "送信"}
       </button>
 
-      <h3>プレビュー</h3>
+      <h3>プレビューです</h3>
       <div style={{ border: "1px solid #ccc", padding: "10px" }}>
         {markdown.split("\n").map((line, idx) => {
           const imgMatch = line.match(/!\[.*\]\((.*)\)/);
@@ -674,7 +845,5 @@ const MarkdownImageUploader: React.FC = () => {
     </div>
   );
 };
-
-
 
 export default MarkdownImageUploader;
