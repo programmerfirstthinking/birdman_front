@@ -73,7 +73,13 @@ export default function CreateGroup() {
   const [backendSchoolId, setBackendSchoolId] = useState<number | null>(null);
   const [loginUserId, setLoginUserId] = useState<number | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
-const [editingGroupName, setEditingGroupName] = useState("");
+  const [editingGroupName, setEditingGroupName] = useState("");
+
+  type EditGroupRequest = {
+    groupId: number;
+    groupName: string;
+    idToken: string;
+  };
 
   const auth = getAuth();
   const router = useRouter();
@@ -183,6 +189,46 @@ const [editingGroupName, setEditingGroupName] = useState("");
       alert(`エラー: ${err.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveGroup = async (groupId: number) => {
+  if (!currentUser) return;
+
+  try {
+    const idToken = await currentUser.getIdToken();
+
+    const payload: EditGroupRequest = {
+      groupId: groupId,
+      groupName: editingGroupName,
+      idToken: idToken
+    };
+
+    const res = await fetch("http://localhost:8080/editgroup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      throw new Error("グループ編集に失敗しました");
+    }
+
+      const data = await res.json();
+      console.log("編集成功:", data);
+
+      alert("グループ名を更新しました");
+
+      setEditingGroupId(null);
+
+      // 最新データ再取得
+      fetchGroups();
+
+    } catch (err: any) {
+      console.error(err);
+      alert(`エラー: ${err.message}`);
     }
   };
 
@@ -310,11 +356,27 @@ const [editingGroupName, setEditingGroupName] = useState("");
                     }}
                   />
 
-                  <button
-                    onClick={() => {
-                      console.log("保存:", editingGroupName);
-                      setEditingGroupId(null);
+                  {/* <button
+                    // onClick={() => {
+                    //   console.log("保存:", editingGroupName);
+                    //   setEditingGroupId(null);
+                    // }}
+
+                    onClick={() => handleSaveGroup(g.id)}
+                    style={{
+                      marginLeft: "6px",
+                      padding: "4px 8px",
+                      backgroundColor: "#4CAF50",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px"
                     }}
+                  >
+                    保存
+                  </button> */}
+
+                  <button
+                    onClick={() => handleSaveGroup(g.id)}
                     style={{
                       marginLeft: "6px",
                       padding: "4px 8px",
