@@ -1,10 +1,13 @@
 "use client";
 
+import React from "react";
+
 import { useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import { getApps, initializeApp } from "firebase/app";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 /* ================================
    Firebase 初期化
@@ -19,6 +22,7 @@ const firebaseConfig = {
   measurementId: "G-42VYEZ51GF"
 };
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const storage = getStorage(app);
 
 /* ================================
    型定義
@@ -124,6 +128,39 @@ export default function SchoolsPage() {
   const [markdown, setMarkdown] = useState<string>("");
 
   const auth = getAuth();
+
+  const handleDrop = async (e: React.DragEvent<HTMLTextAreaElement>) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+
+  const file = e.dataTransfer.files[0];
+
+  const MAX_SIZE = 1024 * 1024; // 1MB
+  if (file.size > MAX_SIZE) {
+    alert("画像は1MB以下にしてください");
+    return;
+  }
+
+  try {
+    const storageRef = ref(storage, "images/" + Date.now() + "_" + file.name);
+
+    await uploadBytes(storageRef, file);
+
+    const url = await getDownloadURL(storageRef);
+
+    setMarkdown((prev) => prev + `\n![${file.name}](${url})\n`);
+  } catch (err) {
+    console.error(err);
+    alert("画像アップロードに失敗しました");
+  }
+};
+
+const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
+  e.preventDefault();
+  e.stopPropagation();
+};
 
   /* ----------------------------
      Firebase currentUser を監視
@@ -379,11 +416,18 @@ export default function SchoolsPage() {
             onChange={(e) => setContentName(e.target.value)}
             style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
           />
-          <textarea
-            value={markdown}
-            onChange={(e) => setMarkdown(e.target.value)}
-            style={{ width: "100%", height: "200px", padding: "10px", marginBottom: "10px" }}
-          />
+        <textarea
+          value={markdown}
+          onChange={(e) => setMarkdown(e.target.value)}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          style={{
+            width: "100%",
+            height: "200px",
+            padding: "10px",
+            marginBottom: "10px",
+          }}
+        />
 
           {/* Markdown プレビュー */}
           <div style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
@@ -473,7 +517,8 @@ export default function SchoolsPage() {
                 ),
                 a: ({ node, ...props }) => {
                   if (props.href?.endsWith(".pdf")) {
-                    const name = props.children?.[0] || "PDFファイル";
+                    const childrenArray = React.Children.toArray(props.children);
+                    const name = childrenArray[0]?.toString() || "PDFファイル";
                     return (
                       <div
                         style={{
