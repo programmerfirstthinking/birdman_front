@@ -689,6 +689,9 @@ import React, { useState, useEffect } from "react";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 
 // 🔥 Firebase 設定
 const firebaseConfig = {
@@ -879,7 +882,7 @@ const handleSend = async () => {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         placeholder="ここにテキストを書いてください。画像をドロップすると自動でマークダウンに挿入されます。"
-        style={{ width: "100%", height: "200px", padding: "10px" }}
+        style={{ width: "100%", height: "200px", padding: "10px", marginBottom: "10px" }}
       />
 
       <button
@@ -891,110 +894,142 @@ const handleSend = async () => {
       </button>
 
       {/* PDF専用アップロード欄 */}
-        <div
-          onDrop={handlePdfDrop}
-          onDragOver={handlePdfDragOver}
+      <div
+        onDrop={handlePdfDrop}
+        onDragOver={handlePdfDragOver}
+        style={{
+          border: "2px dashed #888",
+          padding: "20px",
+          textAlign: "center",
+          marginBottom: "15px",
+          borderRadius: "8px",
+          backgroundColor: "#fafafa",
+        }}
+      >
+        <p>📄 ここにPDFをドラッグ＆ドロップしよう</p>
+        <p>または</p>
+        <label
           style={{
-            border: "2px dashed #888",
-            padding: "20px",
-            textAlign: "center",
-            marginBottom: "15px",
-            borderRadius: "8px",
-            backgroundColor: "#fafafa",
+            backgroundColor: "#0070f3",
+            color: "#fff",
+            padding: "6px 12px",
+            borderRadius: "4px",
+            cursor: "pointer",
           }}
         >
-          <p>📄 ここにPDFをドラッグ＆ドロップ</p>
-          <p>または</p>
-          <label
-            style={{
-              backgroundColor: "#0070f3",
-              color: "#fff",
-              padding: "6px 12px",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
-          >
-            ファイルを選択
-            <input
-              type="file"
-              accept="application/pdf"
-              style={{ display: "none" }}
-              onChange={handlePdfSelect}
-            />
-          </label>
+          ファイルを選択
+          <input
+            type="file"
+            accept="application/pdf"
+            style={{ display: "none" }}
+            onChange={handlePdfSelect}
+          />
+        </label>
 
-          {uploadingPdf && <p>アップロード中...</p>}
+        {uploadingPdf && <p>アップロード中...</p>}
 
-          {pdfUrl && (
-            <div style={{ marginTop: "10px" }}>
-              <p>✅ アップロード済み</p>
-              <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
-                PDFを確認する
-              </a>
-            </div>
-          )}
-        </div>
+        {pdfUrl && (
+          <div style={{ marginTop: "10px" }}>
+            <p>✅ アップロード済み</p>
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+              PDFを確認する
+            </a>
+          </div>
+        )}
+      </div>
 
       <h3>プレビューですよ</h3>
       <div style={{ border: "1px solid #ccc", padding: "10px" }}>
-        {markdown.split("\n").map((line, idx) => {
-          // 画像判定
-          const imgMatch = line.match(/!\[.*\]\((.*\.(png|jpg|jpeg|gif))\)/i);
-          if (imgMatch) {
-            return (
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            // 画像のスタイルをカスタム
+            img: ({ node, ...props }) => (
               <img
-                key={idx}
-                src={imgMatch[1]}
-                alt=""
+                {...props}
                 style={{ maxWidth: "200px", marginBottom: "10px" }}
+                alt={props.alt || ""}
               />
-            );
-          }
+            ),
+            // PDF リンクをMarkdownに含めたい場合のカスタム
+            a: ({ node, ...props }) => {
+              const href = props.href || "";
+              if (href.endsWith(".pdf")) {
+                return (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      border: "1px solid #ccc",
+                      padding: "8px",
+                      marginBottom: "10px",
+                      backgroundColor: "#f0f0f0",
+                      borderRadius: "4px",
+                    }}
+                  >
+                    <span style={{ fontSize: "24px" }}>📄</span>
+                    <span style={{ flex: 1 }}>{props.children}</span>
+                    <a
+                      href={href}
+                      download={props.children?.toString() || "PDF"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        backgroundColor: "#0070f3",
+                        color: "#fff",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        textDecoration: "none",
+                        fontSize: "14px",
+                      }}
+                    >
+                      ダウンロード
+                    </a>
+                  </div>
+                );
+              }
+              return <a {...props} target="_blank" rel="noopener noreferrer" />;
+            },
+          }}
+        >
+          {markdown}
+        </ReactMarkdown>
 
-          // PDF 判定 ![name.pdf](url.pdf) または [name.pdf](url.pdf)
-          const pdfMatch = line.match(/!\[(.*\.pdf)\]\((.*\.pdf)\)/i) || line.match(/\[(.*\.pdf)\]\((.*\.pdf)\)/i);
-          if (pdfMatch) {
-            const name = pdfMatch[1] || `PDF ${idx + 1}`;
-            const url = pdfMatch[2];
-            return (
-              <div
-                key={idx}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  border: "1px solid #ccc",
-                  padding: "8px",
-                  marginBottom: "10px",
-                  backgroundColor: "#f0f0f0",
-                  borderRadius: "4px",
-                }}
-              >
-                <span style={{ fontSize: "24px" }}>📄</span>
-                <span style={{ flex: 1 }}>{name}</span>
-                <a
-                  href={url}
-                  download={name}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    backgroundColor: "#0070f3",
-                    color: "#fff",
-                    padding: "4px 8px",
-                    borderRadius: "4px",
-                    textDecoration: "none",
-                    fontSize: "14px",
-                  }}
-                >
-                  ダウンロード
-                </a>
-              </div>
-            );
-          }
-
-          // 通常テキスト
-          return <p key={idx}>{line}</p>;
-        })}
+        {/* PDFはMarkdownに含めなくてもここで表示可能 */}
+        {pdfUrl && !markdown.includes(pdfUrl) && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              border: "1px solid #ccc",
+              padding: "8px",
+              marginTop: "10px",
+              backgroundColor: "#f0f0f0",
+              borderRadius: "4px",
+            }}
+          >
+            <span style={{ fontSize: "24px" }}>📄</span>
+            <span style={{ flex: 1 }}>PDFファイル</span>
+            <a
+              href={pdfUrl}
+              download="PDF"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                backgroundColor: "#0070f3",
+                color: "#fff",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                textDecoration: "none",
+                fontSize: "14px",
+              }}
+            >
+              ダウンロード
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
