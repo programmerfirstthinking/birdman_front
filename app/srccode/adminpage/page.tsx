@@ -63,7 +63,7 @@ export default function AdminPage() {
           グループ
         </button>
 
-        <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/group-topics")}>
+        <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/grouptopics")}>
           グループトピック
         </button>
 
