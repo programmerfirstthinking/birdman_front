@@ -11,9 +11,7 @@ import {
   User 
 } from "firebase/auth";
 
-// ----------------------
-// Firebase設定
-// ----------------------
+
 const firebaseConfig = {
   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
   authDomain: "share-info-project.firebaseapp.com",
