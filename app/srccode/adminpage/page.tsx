@@ -75,6 +75,10 @@ export default function AdminPage() {
           ユーザー
         </button>
 
+        <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/password")}>
+          パスワード
+        </button>
+
       </div>
     </div>
   )
