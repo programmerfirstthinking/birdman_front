@@ -1,16 +1,24 @@
-"use client"; // Next.js 13 appディレクトリの場合
+"use client";
 
-import { useState } from "react";
-// import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-// import { GoogleAuthProvider } from "firebase/auth";
-import { getAuth,onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, reload } from "firebase/auth";
+// import { useState, useEffect } from "react";
+// // import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, User } from "firebase/auth";
+// import { initializeApp } from "firebase/app";
+// import { useRouter } from "next/navigation";
+// import { getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
-// Import the functions you need from the SDKs you need
+"use client";
+
+import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { sign } from "crypto";
-// import { useRouter } from 'next/router';
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  onAuthStateChanged, 
+  User 
+} from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
@@ -23,132 +31,118 @@ const firebaseConfig = {
 };
 
 const provider = new GoogleAuthProvider();
-
-let GlobalIdToken = "";
-
-
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app);
-
-// function reloadPage() {
-//   const router = useRouter();
-
-//   if (GlobalIdToken!="") {
-//     router.push('/srccode/topic');
-//   }
-// }
-
-// reloadPage();
 
 export default function Signup() {
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
+  const [schoolId, setSchoolId] = useState("");
   const router = useRouter();
 
+  const auth = getAuth();
 
+  // ページ読み込み時にユーザーの自動ログインチェック
+  useEffect(() => {
+    onAuthStateChanged(auth, async (user: User | null) => {
+      if (user) {
+        try {
+          const idToken = await user.getIdToken();
+          // バックエンドにトークン送信
+          const res = await fetch("http://localhost:8080/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ idToken }),
+          });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.name === "mail") {
-      setEmail(e.target.value);
-    } else if (e.target.name === "password") {
-      setPassword(e.target.value);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.uid) {
+              // ユーザー存在 → トピックページへ遷移
+              router.push("/srccode/topic");
+            }
+          }
+        } catch (err) {
+          console.error("自動ログインエラー:", err);
+        }
+      }
+    });
+  }, [auth, router]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name: field, value } = e.target;
+    if (field === "mail") setEmail(value);
+    else if (field === "password") setPassword(value);
+    else if (field === "name") setName(value);
+    else if (field === "bio") setBio(value);
+    else if (field === "schoolId") {
+      const halfWidthValue = value.replace(/[^\x20-\x7E]/g, "");
+      setSchoolId(halfWidthValue);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // ページリロードを止める
+    e.preventDefault();
+    if (name.length > 10) { alert("名前は10文字以内"); return; }
+    if (bio.length > 30) { alert("自己紹介は30文字以内"); return; }
+    if (!password) { alert("パスワードを入力してください"); return; }
 
-    const auth = getAuth();
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log("サインアップ成功:", user);
-      alert("登録成功しました！");
-      console.log("ユーザーID:", user.uid);
-    } catch (error: any) {
-      console.error(error);
-      alert(`エラー: ${error.message}`);
+      const idToken = await user.getIdToken();
+
+      // バックエンドにユーザー作成／存在確認
+      const res = await fetch("http://localhost:8080/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (res.ok) {
+        router.push("/srccode/topic");
+      }
+    } catch (err) {
+      console.error("サインアップエラー:", err);
+      alert("サインアップに失敗しました");
     }
   };
 
-  function signInWithGoogle() {
-    const auth = getAuth();
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        const user = result.user;
-        console.log("Googleサインイン成功:", user);
-        alert("Googleでのサインインに成功しました");
-      })
-      .catch((error) => {
-        console.error(error);
-        alert(`Googleサインインエラー: ${error.message}`);
+  const signInWithGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const idToken = await user.getIdToken();
+
+      const res = await fetch("http://localhost:8080/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
       });
-  }
 
-
-
-  
+      if (res.ok) {
+        router.push("/srccode/topic");
+      }
+    } catch (err) {
+      console.error("Googleサインインエラー:", err);
+      alert("Googleサインインに失敗しました");
+    }
+  };
 
   return (
     <div>
       <h2>サインアップ</h2>
-      <form onSubmit={handleSubmit} className="signup">
-        <input
-          type="email"
-          name="mail"
-          placeholder="メールアドレス"
-          value={email}
-          onChange={handleChange}
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="パスワード"
-          value={password}
-          onChange={handleChange}
-        />
+      <form onSubmit={handleSubmit}>
+        <input type="text" name="name" placeholder="名前" value={name} maxLength={10} onChange={handleChange} />
+        <textarea name="bio" placeholder="自己紹介" value={bio} maxLength={30} onChange={handleChange} />
+        <input type="text" name="schoolId" placeholder="学校ID（半角のみ）" value={schoolId} onChange={handleChange} />
+        <input type="password" name="password" placeholder="パスワード" value={password} onChange={handleChange} />
         <button type="submit">送信</button>
       </form>
-      <button onClick={() => {
-        const auth = getAuth();
-        signInWithPopup(auth, provider)
-          // .then(async (result) => {
-
-          .then(async (result) => {
-            const user = result.user;
-
-            alert("Googleでのサインインに成功しました");
-
-            const idToken = await user.getIdToken();
-            GlobalIdToken = idToken;
-
-            router.push('/srccode/topic');
-
-            await fetch("http://localhost:8080/login", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ idToken }),
-
-            });
-
-            console.log("グローバル:", GlobalIdToken);
-          })
-          .catch((error) => {
-            console.error(error);
-            alert(`Googleサインインエラー: ${error.message}`);
-          });
-        }
-      }>Googleでサインイン</button>
+      <button onClick={signInWithGoogle}>Googleでサインイン</button>
     </div>
   );
 }
