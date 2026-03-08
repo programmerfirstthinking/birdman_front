@@ -45,41 +45,7 @@ type ApiResponse = {
   current_user?: { id: number };
 };
 
-/* ================================
-   Markdown風パーサ
-================================ */
-// const parseContent = (text?: string) => {
-//   if (!text) return []; // undefined または空文字なら空配列を返す
 
-//   const parts: { type: "text" | "image" | "pdf"; content: string; name?: string }[] = [];
-//   const regex = /!\[(.*?)\]\((.*?)\)|\[(.*?)\.pdf\]\((.*?)\)/gi;
-//   let lastIndex = 0;
-//   let match;
-
-//   while ((match = regex.exec(text)) !== null) {
-//     if (match.index > lastIndex) {
-//       parts.push({ type: "text", content: text.substring(lastIndex, match.index) });
-//     }
-
-//     if (match[2]?.toLowerCase().endsWith(".pdf")) {
-//       const name = match[1]?.endsWith(".pdf") ? match[1] : match[1] + ".pdf";
-//       parts.push({ type: "pdf", content: match[2], name });
-//     } else if (match[4]) {
-//       const name = match[3] + ".pdf";
-//       parts.push({ type: "pdf", content: match[4], name });
-//     } else if (match[2]) {
-//       parts.push({ type: "image", content: match[2] });
-//     }
-
-//     lastIndex = regex.lastIndex;
-//   }
-
-//   if (lastIndex < text.length) {
-//     parts.push({ type: "text", content: text.substring(lastIndex) });
-//   }
-
-//   return parts;
-// };
 
 const parseContent = (text?: string) => {
   if (!text) return [];
@@ -215,340 +181,153 @@ const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
 
   const contentParts = parseContent(isEditing ? markdown : responseData.data.content ?? "");
   
-  // return (
-  //   <div style={{ padding: "16px" }}>
-  //     <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-  //       スクールトピックですよ
-
-  //       {responseData.current_user?.id === responseData.data.user_id && !isEditing && (
-  //         <span style={{ marginLeft: "auto" }}>
-  //           <button
-  //             onClick={() => {
-  //               setContentName(responseData.data.group_contents_name);
-  //               setMarkdown(responseData.data.content ?? "");
-  //               setIsEditing(true);
-  //             }}
-  //             style={{
-  //               backgroundColor: "#f0ad4e",
-  //               color: "white",
-  //               border: "none",
-  //               padding: "4px 8px",
-  //               borderRadius: "4px",
-  //               cursor: "pointer",
-  //             }}
-  //           >
-  //             編集
-  //           </button>
-  //         </span>
-  //       )}
-  //     </h2>
-
-  //     {isEditing ? (
-  //       <>
-  //         {/* 編集フォーム */}
-  //         <input
-  //           type="text"
-  //           value={contentName}
-  //           onChange={(e) => setContentName(e.target.value)}
-  //           style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-  //         />
-  //         <textarea
-  //           value={markdown}
-  //           onChange={(e) => setMarkdown(e.target.value)}
-  //           style={{ width: "100%", height: "200px", padding: "10px", marginBottom: "10px" }}
-  //         />
-
-  //         {/* Markdown プレビュー */}
-  //         <div style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
-  //           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-  //             {markdown}
-  //           </ReactMarkdown>
-  //         </div>
-
-  //         {/* 更新ボタン */}
-  //         <button
-  //           onClick={async () => {
-  //             if (!contentId || !currentUser) return;
-  //             try {
-  //               const idToken = await currentUser.getIdToken();
-  //               const res = await fetch("http://localhost:8080/editSchoolContent", {
-  //                 method: "POST",
-  //                 headers: { "Content-Type": "application/json" },
-  //                 body: JSON.stringify({
-  //                   id: contentId,
-  //                   group_contents_name: contentName,
-  //                   content: markdown,
-  //                   idToken,
-  //                 }),
-  //               });
-  //               if (!res.ok) throw new Error("更新に失敗しました");
-
-  //               const data: ApiResponse = await res.json();
-  //               setResponseData(data);
-  //               setIsEditing(false);
-  //             } catch (err) {
-  //               console.error(err);
-  //               alert("更新に失敗しました");
-  //             }
-  //           }}
-  //           style={{ marginRight: "10px", padding: "6px 12px" }}
-  //         >
-  //           更新
-  //         </button>
-
-  //         {/* キャンセルボタン */}
-  //         <button onClick={() => setIsEditing(false)} style={{ padding: "6px 12px" }}>
-  //           キャンセル
-  //         </button>
-  //       </>
-  //     ) : (
-  //       <>
-  //         <p><strong>ID:</strong> {responseData.data.id}</p>
-  //         <p><strong>グループID:</strong> {responseData.data.group_id}</p>
-  //         <p><strong>スクールID:</strong> {responseData.data.school_id}</p>
-  //         <p><strong>名前:</strong> {responseData.data.group_contents_name}</p>
-  //         <p><strong>本文:</strong></p>
-
-  //         {/* PDF URL があれば表示 */}
-  //         {responseData.data.pdf_url && (
-  //           <div
-  //             style={{
-  //               display: "flex",
-  //               gap: "8px",
-  //               border: "1px solid #ccc",
-  //               padding: "8px",
-  //               margin: "8px 0",
-  //               borderRadius: "4px",
-  //               backgroundColor: "#e8f0fe",
-  //               alignItems: "center",
-  //             }}
-  //           >
-  //             <span>📄</span>
-  //             <span style={{ flex: 1 }}>PDFファイル</span>
-  //             <a
-  //               href={responseData.data.pdf_url}
-  //               target="_blank"
-  //               rel="noopener noreferrer"
-  //               style={{ textDecoration: "underline", color: "#1a73e8" }}
-  //             >
-  //               ダウンロード
-  //             </a>
-  //           </div>
-  //         )}
-
-  //         {/* Markdown からパースした内容 */}
-  //         <div>
-  //           {contentParts.map((part, idx) => {
-  //             if (part.type === "image") {
-  //               return (
-  //                 <img
-  //                   key={idx}
-  //                   src={part.content}
-  //                   style={{ maxWidth: "100%", margin: "8px 0" }}
-  //                   alt=""
-  //                 />
-  //               );
-  //             }
-  //             if (part.type === "pdf") {
-  //               return (
-  //                 <div
-  //                   key={idx}
-  //                   style={{
-  //                     display: "flex",
-  //                     gap: "8px",
-  //                     border: "1px solid #ccc",
-  //                     padding: "8px",
-  //                     margin: "8px 0",
-  //                     borderRadius: "4px",
-  //                     backgroundColor: "#f0f0f0",
-  //                   }}
-  //                 >
-  //                   <span>📄</span>
-  //                   <span style={{ flex: 1 }}>{part.name}</span>
-  //                   <a href={part.content} target="_blank" rel="noopener noreferrer">
-  //                     ダウンロード
-  //                   </a>
-  //                 </div>
-  //               );
-  //             }
-  //             return <p key={idx}>{part.content}</p>;
-  //           })}
-  //         </div>
-  //       </>
-  //     )}
-  //   </div>
-  // );
 
   return (
-    <div style={{ padding: "16px" }}>
-      <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        スクールトピックですよ
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 flex justify-center font-sans">
+      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg p-6">
 
-        {responseData.current_user?.id === responseData.data.user_id && !isEditing && (
-          <span style={{ marginLeft: "auto" }}>
+        <h2 className="flex items-center justify-between text-2xl font-bold text-blue-800 mb-6">
+          スクールトピック
+          {responseData.current_user?.id === responseData.data.user_id && !isEditing && (
             <button
               onClick={() => {
                 setContentName(responseData.data.group_contents_name);
                 setMarkdown(responseData.data.content ?? "");
                 setIsEditing(true);
               }}
-              style={{
-                backgroundColor: "#f0ad4e",
-                color: "white",
-                border: "none",
-                padding: "4px 8px",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
+              className="ml-auto bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-lg transition"
             >
               編集
             </button>
-          </span>
-        )}
-      </h2>
-
-      {isEditing ? (
-        <>
-          {/* 編集フォーム */}
-          <input
-            type="text"
-            value={contentName}
-            onChange={(e) => setContentName(e.target.value)}
-            style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-          />
-        <textarea
-          value={markdown}
-          onChange={(e) => setMarkdown(e.target.value)}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          style={{
-            width: "100%",
-            height: "200px",
-            padding: "10px",
-            marginBottom: "10px",
-          }}
-        />
-
-          {/* Markdown プレビュー */}
-          <div style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {markdown}
-            </ReactMarkdown>
-          </div>
-
-          {/* 更新ボタン */}
-          <button
-            onClick={async () => {
-              if (!contentId || !currentUser) return;
-              try {
-                const idToken = await currentUser.getIdToken();
-                const res = await fetch("http://localhost:8080/editSchoolContent", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    id: contentId,
-                    group_contents_name: contentName,
-                    content: markdown,
-                    idToken,
-                  }),
-                });
-                if (!res.ok) throw new Error("更新に失敗しました");
-
-                const data: ApiResponse = await res.json();
-                setResponseData(data);
-                setIsEditing(false);
-              } catch (err) {
-                console.error(err);
-                alert("更新に失敗しました");
-              }
-            }}
-            style={{ marginRight: "10px", padding: "6px 12px" }}
-          >
-            更新
-          </button>
-
-          {/* キャンセルボタン */}
-          <button onClick={() => setIsEditing(false)} style={{ padding: "6px 12px" }}>
-            キャンセル
-          </button>
-        </>
-      ) : (
-        <>
-          <p><strong>ID:</strong> {responseData.data.id}</p>
-          <p><strong>グループID:</strong> {responseData.data.group_id}</p>
-          <p><strong>スクールID:</strong> {responseData.data.school_id}</p>
-          <p><strong>名前:</strong> {responseData.data.group_contents_name}</p>
-          <p><strong>本文:</strong></p>
-
-          {/* PDF URL があれば表示 */}
-          {responseData.data.pdf_url && (
-            <div
-              style={{
-                display: "flex",
-                gap: "8px",
-                border: "1px solid #ccc",
-                padding: "8px",
-                margin: "8px 0",
-                borderRadius: "4px",
-                backgroundColor: "#e8f0fe",
-                alignItems: "center",
-              }}
-            >
-              <span>📄</span>
-              <span style={{ flex: 1 }}>PDFファイル</span>
-              <a
-                href={responseData.data.pdf_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: "underline", color: "#1a73e8" }}
-              >
-                ダウンロード
-              </a>
-            </div>
           )}
+        </h2>
 
-          {/* Markdown をそのまま表示 */}
-          <div style={{ border: "1px solid #ccc", padding: "10px" }}>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                img: ({ node, ...props }) => (
-                  <img {...props} style={{ maxWidth: "100%", margin: "8px 0" }} alt="" />
-                ),
-                a: ({ node, ...props }) => {
-                  if (props.href?.endsWith(".pdf")) {
-                    const childrenArray = React.Children.toArray(props.children);
-                    const name = childrenArray[0]?.toString() || "PDFファイル";
-                    return (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "8px",
-                          border: "1px solid #ccc",
-                          padding: "8px",
-                          margin: "8px 0",
-                          borderRadius: "4px",
-                          backgroundColor: "#f0f0f0",
-                          alignItems: "center",
-                        }}
-                      >
-                        <span>📄</span>
-                        <span style={{ flex: 1 }}>{name}</span>
-                        <a href={props.href} target="_blank" rel="noopener noreferrer">
-                          ダウンロード
-                        </a>
-                      </div>
-                    );
+        {isEditing ? (
+          <>
+            {/* 編集フォーム */}
+            <input
+              type="text"
+              value={contentName}
+              onChange={(e) => setContentName(e.target.value)}
+              className="w-full mb-4 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="コンテンツ名"
+            />
+            <textarea
+              value={markdown}
+              onChange={(e) => setMarkdown(e.target.value)}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              className="w-full h-48 mb-4 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              placeholder="Markdown本文を入力…（画像をドラッグ＆ドロップ可能）"
+            />
+
+            {/* Markdown プレビュー */}
+            <div className="border border-blue-200 p-4 mb-4 rounded-lg bg-blue-50">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
+            </div>
+
+            {/* 更新・キャンセルボタン */}
+            <div className="flex gap-4">
+              <button
+                onClick={async () => {
+                  if (!contentId || !currentUser) return;
+                  try {
+                    const idToken = await currentUser.getIdToken();
+                    const res = await fetch("http://localhost:8080/editSchoolContent", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        id: contentId,
+                        group_contents_name: contentName,
+                        content: markdown,
+                        idToken,
+                      }),
+                    });
+                    if (!res.ok) throw new Error("更新に失敗しました");
+
+                    const data: ApiResponse = await res.json();
+                    setResponseData(data);
+                    setIsEditing(false);
+                  } catch (err) {
+                    console.error(err);
+                    alert("更新に失敗しました");
                   }
-                  return <a {...props} target="_blank" rel="noopener noreferrer" />;
-                },
-              }}
-            >
-              {responseData.data.content ?? ""}
-            </ReactMarkdown>
-          </div>
-        </>
-      )}
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              >
+                更新
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition"
+              >
+                キャンセル
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* 表示モード */}
+            <div className="mb-4">
+              <p><strong>ID:</strong> {responseData.data.id}</p>
+              <p><strong>グループID:</strong> {responseData.data.group_id}</p>
+              <p><strong>スクールID:</strong> {responseData.data.school_id}</p>
+              <p><strong>名前:</strong> {responseData.data.group_contents_name}</p>
+              <p><strong>本文:</strong></p>
+            </div>
+
+            {/* PDF表示 */}
+            {responseData.data.pdf_url && (
+              <div className="flex items-center justify-between gap-2 p-4 mb-4 border border-blue-300 bg-blue-50 rounded-lg">
+                <span className="text-2xl">📄</span>
+                <span className="flex-1 text-blue-700">PDFファイル</span>
+                <a
+                  href={responseData.data.pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+                >
+                  ダウンロード
+                </a>
+              </div>
+            )}
+
+            {/* Markdown表示 */}
+            <div className="border border-blue-200 p-4 rounded-lg bg-blue-50">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  img: ({ node, ...props }) => (
+                    <img {...props} style={{ maxWidth: "100%", margin: "8px 0", borderRadius: "6px", border: "1px solid #cbd5e1" }} alt="" />
+                  ),
+                  a: ({ node, ...props }) => {
+                    if (props.href?.endsWith(".pdf")) {
+                      const name = React.Children.toArray(props.children)[0]?.toString() || "PDFファイル";
+                      return (
+                        <div className="flex items-center gap-2 p-3 mb-3 border border-blue-300 bg-blue-100 rounded-lg">
+                          <span className="text-2xl">📄</span>
+                          <span className="flex-1 text-blue-700">{name}</span>
+                          <a
+                            href={props.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+                          >
+                            ダウンロード
+                          </a>
+                        </div>
+                      );
+                    }
+                    return <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" />;
+                  },
+                }}
+              >
+                {responseData.data.content ?? ""}
+              </ReactMarkdown>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

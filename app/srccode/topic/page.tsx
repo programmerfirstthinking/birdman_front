@@ -145,85 +145,115 @@ const [results, setResults] = useState<Topic[]>([]);
     router.push('/srccode/topiccontents/' + id);
   }
 
-
   return (
-    <div>
-      <h2>トピックの作成はこちら</h2>
-        {/* <form  className="signup" method="POST"> */}
-        <div></div>
-        <form
-            className="signup"
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200 p-6">
+
+      <div className="w-full max-w-3xl">
+
+        <h1 className="text-4xl font-bold mb-10 text-center text-indigo-700">
+          トピック掲示板です
+        </h1>
+
+        {/* 投稿フォーム */}
+        <div className="bg-white shadow-xl rounded-2xl p-8 mb-10">
+
+          <h2 className="text-2xl font-semibold mb-6 text-gray-700">
+            新しいトピックを作成
+          </h2>
+
+          <form
+            className="flex flex-col gap-4"
             onSubmit={async (e) => {
               e.preventDefault();
               await sendinfo();
             }}
           >
-          <input
-            type="text"
-            name="topicname"
-            placeholder="トピック名"
-            value={topicName}
-            onChange={(e)=>setTopicName(e.target.value)}
-          />
-          <input
-            type="text"
-            name="topiccontent"
-            placeholder="内容"
-            value={topicContent}
-            onChange={(e)=>setTopicContent(e.target.value)}
-          />
-        <button type="submit">トピックの作成</button>
-      </form>
 
-      <div>
-      {/* <button onClick={fetchData}>取得</button> */}
+            <input
+              type="text"
+              name="topicname"
+              placeholder="トピック名"
+              value={topicName}
+              onChange={(e)=>setTopicName(e.target.value)}
+              className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+
+            <textarea
+              name="topiccontent"
+              placeholder="内容"
+              value={topicContent}
+              onChange={(e)=>setTopicContent(e.target.value)}
+              className="border border-gray-300 rounded-lg p-3 h-28 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+
+            <button
+              type="submit"
+              className="bg-indigo-500 text-white py-3 rounded-lg font-semibold hover:bg-indigo-600 transition"
+            >
+              投稿する
+            </button>
+
+          </form>
+
+        </div>
 
 
+        {/* トピック一覧 */}
         <div>
-          <div>テスと</div>
-          {/* {Object.entries(data).map(([key, value]) => (
-            <div key={key}>
-              <strong>{key}:</strong>{" "}
-              {typeof value === "object"
-                ? JSON.stringify(value)
-                : String(value)}
-            </div>
-          ))} */}
-          {/* {results.map((topic) => (
-            <div key={topic.id}>
-              <h3>{topic.name}</h3>
-              <p>{topic.content}</p>
-            </div>
-          ))} */}
-          <div>
-  <h2>トピック一覧</h2>
 
-            {(!results || results.length === 0) ? (
-              <p>まだ投稿がありません</p>
-            ) : (
-              results.map((topic) => (
+          <h2 className="text-2xl font-semibold mb-6 text-gray-700">
+            トピック一覧
+          </h2>
+
+          {(!results || results.length === 0) ? (
+            <p className="text-gray-500 text-center">
+              まだ投稿がありません
+            </p>
+          ) : (
+
+            <div className="flex flex-col gap-5">
+
+              {results.map((topic) => (
+
                 <div
                   key={topic.ID}
-                  style={{ border: "1px solid gray", margin: "10px", padding: "10px" }}
+                  className="bg-white shadow-md rounded-xl p-6 hover:shadow-xl transition"
                 >
+
                   <button
-                    className={String(topic.ID)}
+                    className="text-left w-full"
                     onClick={() => road_to_topic(String(topic.ID))}
                   >
-                    <h3>{topic.TopicName}</h3>
-                    <p>{topic.Content}</p>
-                    <small>作成者ID: {topic.UserID}</small>
-                    <br />
-                    <small>作成日: {new Date(topic.CreatedAt).toLocaleString()}</small>
+
+                    <h3 className="text-xl font-bold text-indigo-600">
+                      {topic.TopicName}
+                    </h3>
+
+                    <p className="text-gray-700 mt-2">
+                      {topic.Content}
+                    </p>
+
+                    <div className="text-sm text-gray-400 mt-4">
+                      <div>作成者ID: {topic.UserID}</div>
+                      <div>
+                        作成日: {new Date(topic.CreatedAt).toLocaleString()}
+                      </div>
+                    </div>
+
                   </button>
+
                 </div>
-              ))
-            )}
-          </div>
+
+              ))}
+
+            </div>
+
+          )}
+
         </div>
-        </div>
-      <div>
+
+      </div>
+
     </div>
-    </div>
-  )
+  );
 }

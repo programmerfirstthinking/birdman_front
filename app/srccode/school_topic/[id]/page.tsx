@@ -43,15 +43,6 @@ type GroupContent = {
   userId: number;
 };
 
-// type GroupItem = {
-//   id: number;
-//   userId: number;
-//   schoolId: number;
-//   createdAt: string;
-//   updatedAt: string;
-//   contents: GroupContent[];
-// };
-
 type GroupItem = {
   id: number;
   userId: number;
@@ -233,24 +224,11 @@ export default function CreateGroup() {
   };
 
   const handleAddContent = async (groupId: number) => {
-    // const handleAddContent = async (groupId: number) => {
-    //   // URLの最後の数字を取得
-    //   const pathParts = window.location.pathname.split("/").filter(Boolean);
-    //   const lastPart = pathParts[pathParts.length - 1]; 
-    //   const idFromUrl = parseInt(lastPart, 10);
 
-    //   if (isNaN(idFromUrl)) {
-    //     alert("URLからIDを取得できませんでした");
-    //     return;
-    //   }
-
-    //   // 取得したIDをURLに埋め込む
-    //   // router.push(`/srccode/makeSchoolTopic/${groupId}`);
-    // };
     router.push(`/srccode/makeSchoolTopic/${groupId}`);
   };
 
-  // const see_school_topic
+
 
   const signInWithGoogle = async () => {
     try {
@@ -264,274 +242,136 @@ export default function CreateGroup() {
   };
 
 
-
   return (
-    <div style={{ padding: "16px" }}>
-      <h2>グループ作成します</h2>
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 flex flex-col items-center">
+      <div className="w-full max-w-3xl">
 
-      {!currentUser && (
-        <button onClick={signInWithGoogle} style={{ marginBottom: "16px" }}>
-          Googleでログイン
-        </button>
-      )}
-{/* 
-      {currentUser && (
-        <form onSubmit={handleSubmitGroup} style={{ marginBottom: "32px" }}>
-          <input
-            type="text"
-            placeholder="グループ名を入力"
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            required
-            style={{ padding: "8px", marginRight: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
-          />
+        <h2 className="text-3xl font-bold text-center text-blue-800 mb-8">
+          グループ作成画面
+        </h2>
+
+        {!currentUser && (
           <button
-            type="submit"
-            disabled={loading}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#4CAF50",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
+            onClick={signInWithGoogle}
+            className="block mx-auto mb-8 px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
           >
-            {loading ? "作成中..." : "グループを作成"}
+            Googleでログイン
           </button>
-        </form>
-      )} */}
+        )}
 
-      {currentUser && backendSchoolId === schoolId && (
-        <form onSubmit={handleSubmitGroup} style={{ marginBottom: "32px" }}>
-          <input
-            type="text"
-            placeholder="グループ名を入力"
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            required
-            style={{ padding: "8px", marginRight: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#4CAF50",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-          >
-            {loading ? "作成中..." : "グループを作成"}
-          </button>
-        </form>
-      )}
+        {currentUser && backendSchoolId === schoolId && (
+          <form onSubmit={handleSubmitGroup} className="flex gap-4 mb-8">
+            <input
+              type="text"
+              placeholder="グループ名を入力"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              required
+              className="flex-1 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className={`px-4 py-3 rounded-lg text-white font-semibold ${
+                loading ? "bg-blue-300 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+              } transition`}
+            >
+              {loading ? "作成中..." : "グループ作成"}
+            </button>
+          </form>
+        )}
 
-      <h2>全グループ一覧ですよ</h2>
-      {fetchingGroups ? (
-        <p>読み込み中...</p>
-      ) : groups.length === 0 ? (
-        <p>まだグループはありません</p>
-      ) : (
-        <ul>
-          {groups.map((g) => (
-            <li key={g.id} style={{ border: "1px solid #ccc", padding: "8px", marginBottom: "8px" }}>
-              {/* <p>グループ名: {g.groupName}</p> 
-              <p>ユーザーID: {g.userId}</p> */}
+        <h3 className="text-2xl font-semibold text-blue-700 mb-6">
+          全グループ一覧
+        </h3>
 
-              {/* <p>グループ名: {g.groupName}</p> */}
+        {fetchingGroups ? (
+          <p className="text-center text-blue-500">読み込み中...</p>
+        ) : groups.length === 0 ? (
+          <p className="text-center text-blue-500">まだグループはありません</p>
+        ) : (
+          <div className="flex flex-col gap-6">
+            {groups.map((g) => (
+              <div
+                key={g.id}
+                className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition"
+              >
+                {editingGroupId === g.id ? (
+                  <div className="flex gap-3 mb-4">
+                    <input
+                      type="text"
+                      value={editingGroupName}
+                      onChange={(e) => setEditingGroupName(e.target.value)}
+                      className="flex-1 p-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    <button
+                      onClick={() => handleSaveGroup(g.id)}
+                      className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    >
+                      保存
+                    </button>
+                  </div>
+                ) : (
+                  <h4 className="text-xl font-semibold text-blue-800 mb-2">
+                    グループ名: {g.groupName}
+                  </h4>
+                )}
 
-              {editingGroupId === g.id ? (
-                <div>
-                  <input
-                    type="text"
-                    value={editingGroupName}
-                    onChange={(e) => setEditingGroupName(e.target.value)}
-                    style={{
-                      padding: "4px",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px"
-                    }}
-                  />
+                <p className="text-blue-600 mb-1">ユーザーID: {g.userId}</p>
+                <p className="text-blue-600 mb-1">学校ID: {g.schoolId}</p>
+                <p className="text-blue-600 mb-2">
+                  作成日時: {new Date(g.createdAt).toLocaleString()}
+                </p>
 
-                  {/* <button
-                    // onClick={() => {
-                    //   console.log("保存:", editingGroupName);
-                    //   setEditingGroupId(null);
-                    // }}
+                <div className="flex gap-3 flex-wrap mb-4">
+                  {loginUserId === g.userId && editingGroupId !== g.id && (
+                    <button
+                      onClick={() => { setEditingGroupId(g.id); setEditingGroupName(g.groupName); }}
+                      className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                    >
+                      編集
+                    </button>
+                  )}
 
-                    onClick={() => handleSaveGroup(g.id)}
-                    style={{
-                      marginLeft: "6px",
-                      padding: "4px 8px",
-                      backgroundColor: "#4CAF50",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px"
-                    }}
-                  >
-                    保存
-                  </button> */}
-
-                  <button
-                    onClick={() => handleSaveGroup(g.id)}
-                    style={{
-                      marginLeft: "6px",
-                      padding: "4px 8px",
-                      backgroundColor: "#4CAF50",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px"
-                    }}
-                  >
-                    保存
-                  </button>
+                  {backendSchoolId === schoolId && (
+                    <button
+                      onClick={() => handleAddContent(g.id)}
+                      className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                    >
+                      追加
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <p>グループ名: {g.groupName}</p>
-              )}
 
-
-              <p>ユーザーID: {g.userId}</p>
-              {/* <p>グループID: </p> */}
-
-
-
-
-              {/* {loginUserId === g.userId && (
-                <button
-                  onClick={() => router.push(`/srccode/edit_group/${g.id}`)}
-                  style={{
-                    padding: "4px 8px",
-                    backgroundColor: "#FF9800",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer"
-                  }}
-                >
-                  編集
-                </button>
-              )} */}
-
-
-              {loginUserId === g.userId && editingGroupId !== g.id && (
-                <button
-                  onClick={() => {
-                    setEditingGroupId(g.id);
-                    setEditingGroupName(g.groupName);
-                  }}
-                  style={{
-                    padding: "4px 8px",
-                    backgroundColor: "#FF9800",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer"
-                  }}
-                >
-                  編集
-                </button>
-              )}
-
-              {/* {loginUserId === g.userId && editingGroupId !== g.id && (
-                <button
-                  onClick={() => {
-                    setEditingGroupId(g.id);
-                    setEditingGroupName(g.groupName);
-                  }}
-                  style={{
-                    padding: "4px 8px",
-                    backgroundColor: "#FF9800",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer"
-                  }}
-                >
-                  編集
-                </button>
-              )} */}
-              <p>学校ID: {g.schoolId}</p>
-              <p>作成日時: {new Date(g.createdAt).toLocaleString()}</p>
-              <p>テストです</p>
-              {g.contents.length > 0 ? (
-                <ul>
-                  {g.contents.map((c) => (
-                    <li key={c.id} style={{ marginBottom: "8px" }}>
-                      <strong>トピック:</strong> {c.contentName} <br />
-                      {/* <strong>本文:</strong> {c.content} <br /> */}
-                     <button
-                        onClick={() => router.push(`/srccode/see_school_topic/${c.id}`)}
-                        style={{
-                          padding: "2px 6px",
-                          backgroundColor: "#F44336",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
+                {g.contents.length > 0 ? (
+                  <div className="flex flex-col gap-3 pl-4">
+                    {g.contents.map((c) => (
+                      <div
+                        key={c.id}
+                        className="bg-blue-50 border border-blue-200 rounded-lg p-3"
                       >
-                        詳しくみる
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>コンテンツはありません</p>
-              )}
-              {/* コンテンツ追加フォーム */}
-              <div style={{ marginTop: "8px" }}>
-                {/* <input
-                  type="text"
-                  placeholder="コンテンツ名"
-                  value={contentInputs[g.id]?.name || ""}
-                  onChange={(e) =>
-                    setContentInputs(prev => ({
-                      ...prev,
-                      [g.id]: { ...prev[g.id], name: e.target.value }
-                    }))
-                  }
-                  style={{ padding: "4px", marginRight: "4px", borderRadius: "4px", border: "1px solid #ccc" }}
-                />
-                <input
-                  type="text"
-                  placeholder="本文"
-                  value={contentInputs[g.id]?.content || ""}
-                  onChange={(e) =>
-                    setContentInputs(prev => ({
-                      ...prev,
-                      [g.id]: { ...prev[g.id], content: e.target.value }
-                    }))
-                  }
-                  style={{ padding: "4px", marginRight: "4px", borderRadius: "4px", border: "1px solid #ccc" }}
-                /> */}
-                {backendSchoolId === schoolId && (
-                  <button
-                    onClick={() => handleAddContent(g.id)}
-                    disabled={loading}
-                    style={{
-                      padding: "4px 8px",
-                      backgroundColor: "#2196F3",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: loading ? "not-allowed" : "pointer"
-                    }}
-                  >
-                    追加
-                  </button>
+                        <p className="font-semibold text-blue-700">トピック: {c.contentName}</p>
+                        <button
+                          onClick={() => router.push(`/srccode/see_school_topic/${c.id}`)}
+                          className="mt-2 px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                        >
+                          詳しくみる
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-blue-500">コンテンツはありません</p>
                 )}
               </div>
-            </li>
-          ))}
-        </ul>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
 
 
 
