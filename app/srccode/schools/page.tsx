@@ -421,9 +421,114 @@
 
 
 
+// "use client";
+
+// import { useEffect, useState } from "react";
+
+// type Group = {
+//   ID: number;
+//   UserID: number;
+//   SchoolID: number;
+//   Groupname: string;
+//   CreatedAt: string;
+//   UpdatedAt: string;
+// };
+
+// type SchoolWithGroups = {
+//   id: number;
+//   school_name: string;
+//   groups: Group[];
+// };
+
+// export default function SchoolsPage() {
+//   const [schools, setSchools] = useState<SchoolWithGroups[]>([]);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     const fetchSchools = async () => {
+//       try {
+//         const res = await fetch("http://localhost:8080/schools-with-groups");
+
+//         if (!res.ok) {
+//           throw new Error("APIエラー");
+//         }
+
+//         const data = await res.json();
+
+//         setSchools(data.schools ?? []);
+//       } catch (error) {
+//         console.error("学校取得エラー:", error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchSchools();
+//   }, []);
+
+//   if (loading) {
+//     return <p className="text-center mt-10">読み込み中...</p>;
+//   }
+
+//   return (
+//     <div className="min-h-screen flex flex-col items-center bg-blue-100 p-6">
+//       <h1 className="text-4xl font-bold mb-10 text-blue-800">
+//         学校とグループ一覧
+//       </h1>
+
+//       <div className="w-full max-w-3xl flex flex-col gap-6">
+//         {schools.length === 0 ? (
+//           <p className="text-blue-600 text-center">
+//             学校が登録されていません
+//           </p>
+//         ) : (
+//           schools.map((school) => (
+//             <div
+//               key={school.id}
+//               className="bg-white p-5 rounded-xl shadow-md"
+//             >
+//               <h2 className="text-2xl font-semibold text-blue-700 mb-3">
+//                 {school.school_name}
+//               </h2>
+
+//               {(school.groups?.length ?? 0) === 0 ? (
+//                 <p className="text-blue-400">
+//                   この学校にはグループがありません
+//                 </p>
+//               ) : (
+//                 <ul className="flex flex-col gap-2">
+//                   {school.groups?.map((group) => (
+//                     <li
+//                       key={group.ID}
+//                       className="p-3 bg-blue-50 rounded-md border border-blue-200"
+//                     >
+//                       {group.Groupname}
+//                     </li>
+//                   ))}
+//                 </ul>
+//               )}
+//             </div>
+//           ))
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Group = {
   ID: number;
@@ -443,6 +548,7 @@ type SchoolWithGroups = {
 export default function SchoolsPage() {
   const [schools, setSchools] = useState<SchoolWithGroups[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchSchools = async () => {
@@ -466,6 +572,10 @@ export default function SchoolsPage() {
     fetchSchools();
   }, []);
 
+  function handleSchoolClick(id: number) {
+    router.push(`/srccode/school_topic/${id}`);
+  }
+
   if (loading) {
     return <p className="text-center mt-10">読み込み中...</p>;
   }
@@ -485,7 +595,8 @@ export default function SchoolsPage() {
           schools.map((school) => (
             <div
               key={school.id}
-              className="bg-white p-5 rounded-xl shadow-md"
+              onClick={() => handleSchoolClick(school.id)}
+              className="bg-white p-5 rounded-xl shadow-md cursor-pointer hover:shadow-lg transition hover:bg-blue-50"
             >
               <h2 className="text-2xl font-semibold text-blue-700 mb-3">
                 {school.school_name}
