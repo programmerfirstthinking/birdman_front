@@ -59,6 +59,13 @@ export default function SchoolsPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 p-6">
       <div className="w-full max-w-2xl">
 
+           <button
+          onClick={() => router.push("/srccode/topic")}
+          className="mb-6 px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+        >
+          ← ホームに戻る
+        </button>
+
         <h1 className="text-4xl font-bold mb-10 text-center text-blue-800">
           学校を選択してください
         </h1>

@@ -272,8 +272,10 @@ const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
               <p><strong>ID:</strong> {responseData.data.id}</p>
               <p><strong>グループID:</strong> {responseData.data.group_id}</p>
               <p><strong>スクールID:</strong> {responseData.data.school_id}</p>
+              <p><strong>ユーザーID:</strong> {responseData.data.user_id}</p>
               <p><strong>名前:</strong> {responseData.data.group_contents_name}</p>
               <p><strong>本文:</strong></p>
+
             </div>
 
             {/* PDF表示 */}

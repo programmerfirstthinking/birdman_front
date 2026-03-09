@@ -253,7 +253,8 @@ const [comments, setComments] = useState<Comment[]>([]);
                 className="w-full h-32 p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none resize-none"
               />
             ) : (
-              <div className="text-blue-800">{results?.Content}</div>
+              // <div className="text-blue-800">{results?.Content}</div>
+              <div className="text-blue-800 whitespace-pre-line">{results?.Content}</div>
             )}
           </div>
 
@@ -353,7 +354,8 @@ const [comments, setComments] = useState<Comment[]>([]);
                 </>
               ) : (
                 <>
-                  <p className="text-blue-800 mb-1">{comment.Content}</p>
+                  {/* <p className="text-blue-800 mb-1">{comment.Content}</p> */}
+                  <p className="text-blue-800 mb-1 whitespace-pre-line">{comment.Content}</p>
                   <p className="text-blue-700 text-sm mb-1">
                     ユーザー: {getUserName(comment.UserID)}
                   </p>
