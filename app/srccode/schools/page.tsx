@@ -67,7 +67,7 @@ export default function SchoolsPage() {
         </button>
 
         <h1 className="text-4xl font-bold mb-10 text-center text-blue-800">
-          学校を選択してください
+          学校を選択してくださいね
         </h1>
 
         {loading ? (
