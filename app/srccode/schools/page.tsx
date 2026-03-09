@@ -524,7 +524,6 @@
 
 
 
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -581,7 +580,20 @@ export default function SchoolsPage() {
   }
 
   return (
+
+    
     <div className="min-h-screen flex flex-col items-center bg-blue-100 p-6">
+
+
+       <div className="w-full flex justify-start">
+        <button
+          onClick={() => router.push("/srccode/topic")}
+          className="mb-6 px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+        >
+          ← ホームに戻る
+        </button>
+      </div>
+
       <h1 className="text-4xl font-bold mb-10 text-blue-800">
         学校とグループ一覧
       </h1>

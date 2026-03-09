@@ -9,16 +9,17 @@ import { useState, useEffect } from "react";
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 import { useRouter } from "next/navigation";
+import { firebaseConfig } from "../../firebaseconfig/firebase";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
-  authDomain: "share-info-project.firebaseapp.com",
-  projectId: "share-info-project",
-  storageBucket: "share-info-project.firebasestorage.app",
-  messagingSenderId: "10017220780",
-  appId: "1:10017220780:web:4820d384929f2d84735709",
-  measurementId: "G-42VYEZ51GF"
-};
+// const firebaseConfig = {
+//   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
+//   authDomain: "share-info-project.firebaseapp.com",
+//   projectId: "share-info-project",
+//   storageBucket: "share-info-project.firebasestorage.app",
+//   messagingSenderId: "10017220780",
+//   appId: "1:10017220780:web:4820d384929f2d84735709",
+//   measurementId: "G-42VYEZ51GF"
+// };
 
 const app = initializeApp(firebaseConfig);
 const provider = new GoogleAuthProvider();
@@ -243,17 +244,35 @@ export default function CreateGroup() {
 
 
   return (
+
+    
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 flex flex-col items-center">
+
+      {/* <h1 className="text-3xl font-bold text-blue-900 mb-6">
+        Birdman_Web
+      </h1> */}
       <div className="w-full max-w-3xl">
+
+        
 
       
 
+        {/* <button
+          onClick={() => router.push("/srccode/topic")}
+          className="mb-6 px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+        >
+          ← ホームに戻る
+        </button> */}
+
+
+       <div className="w-full flex justify-start">
         <button
           onClick={() => router.push("/srccode/topic")}
           className="mb-6 px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
         >
           ← ホームに戻る
         </button>
+      </div>
 
         <h2 className="text-3xl font-bold text-center text-blue-800 mb-8">
           グループ作成画面
