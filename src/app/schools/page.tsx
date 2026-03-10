@@ -524,12 +524,136 @@
 
 
 
+// "use client";
+
+// import { useEffect, useState } from "react";
+// import { useRouter } from "next/navigation";
+// import { API_BASE_URL } from "../api/api";
+
+// type Group = {
+//   ID: number;
+//   UserID: number;
+//   SchoolID: number;
+//   Groupname: string;
+//   CreatedAt: string;
+//   UpdatedAt: string;
+// };
+
+// type SchoolWithGroups = {
+//   id: number;
+//   school_name: string;
+//   groups: Group[];
+// };
+
+// export default function SchoolsPage() {
+//   const [schools, setSchools] = useState<SchoolWithGroups[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const router = useRouter();
+
+//   useEffect(() => {
+//     const fetchSchools = async () => {
+//       try {
+//         // const res = await fetch("http://localhost:8080/schools-with-groups");
+//         const res = await fetch(`${API_BASE_URL}/schools-with-groups`);
+
+//         if (!res.ok) {
+//           throw new Error("APIエラー");
+//         }
+
+//         const data = await res.json();
+
+//         setSchools(data.schools ?? []);
+//       } catch (error) {
+//         console.error("学校取得エラー:", error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchSchools();
+//   }, []);
+
+//   function handleSchoolClick(id: number) {
+//     router.push(`/school_topic/${id}`);
+//   }
+
+//   if (loading) {
+//     return <p className="text-center mt-10">読み込み中...</p>;
+//   }
+
+//   return (
+
+    
+//     <div className="min-h-screen flex flex-col items-center bg-blue-100 p-6">
+
+
+//        <div className="w-full flex justify-start">
+//         <button
+//           onClick={() => router.push("/topic")}
+//           className="mb-6 px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+//         >
+//           ← ホームに戻る
+//         </button>
+//       </div>
+
+//       <h1 className="text-4xl font-bold mb-10 text-blue-800">
+//         学校とグループ一覧
+//       </h1>
+
+//       <div className="w-full max-w-3xl flex flex-col gap-6">
+//         {schools.length === 0 ? (
+//           <p className="text-blue-600 text-center">
+//             学校が登録されていません
+//           </p>
+//         ) : (
+//           schools.map((school) => (
+//             <div
+//               key={school.id}
+//               onClick={() => handleSchoolClick(school.id)}
+//               className="bg-white p-5 rounded-xl shadow-md cursor-pointer hover:shadow-lg transition hover:bg-blue-50"
+//             >
+//               <h2 className="text-2xl font-semibold text-blue-700 mb-3">
+//                 {school.school_name}
+//               </h2>
+
+//               {(school.groups?.length ?? 0) === 0 ? (
+//                 <p className="text-blue-400">
+//                   この学校にはグループがありません
+//                 </p>
+//               ) : (
+//                 <ul className="flex flex-col gap-2">
+//                   {school.groups?.map((group) => (
+//                     <li
+//                       key={group.ID}
+//                       className="p-3 bg-blue-50 rounded-md border border-blue-200"
+//                     >
+//                       {group.Groupname}
+//                     </li>
+//                   ))}
+//                 </ul>
+//               )}
+//             </div>
+//           ))
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { API_BASE_URL } from "../api/api";
 
+// ----------------------
+// 型定義
+// ----------------------
 type Group = {
   ID: number;
   UserID: number;
@@ -545,49 +669,66 @@ type SchoolWithGroups = {
   groups: Group[];
 };
 
+// ----------------------
+// fetcher
+// ----------------------
+const fetcher = (url: string) =>
+  fetch(url).then(res => {
+    if (!res.ok) throw new Error("APIエラー");
+    return res.json();
+  });
+
+// ----------------------
+// Page
+// ----------------------
 export default function SchoolsPage() {
-  const [schools, setSchools] = useState<SchoolWithGroups[]>([]);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchSchools = async () => {
-      try {
-        // const res = await fetch("http://localhost:8080/schools-with-groups");
-        const res = await fetch(`${API_BASE_URL}/schools-with-groups`);
+  // ✅ SWRで取得（自動キャッシュ）
+  const { data, isLoading, error } = useSWR(
+    `${API_BASE_URL}/schools-with-groups`,
+    fetcher
+  );
 
-        if (!res.ok) {
-          throw new Error("APIエラー");
-        }
+  const schools: SchoolWithGroups[] = data?.schools ?? [];
 
-        const data = await res.json();
-
-        setSchools(data.schools ?? []);
-      } catch (error) {
-        console.error("学校取得エラー:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSchools();
-  }, []);
-
+  // ----------------------
+  // routing
+  // ----------------------
   function handleSchoolClick(id: number) {
     router.push(`/school_topic/${id}`);
   }
 
-  if (loading) {
-    return <p className="text-center mt-10">読み込み中...</p>;
+  // ----------------------
+  // loading
+  // ----------------------
+  if (isLoading) {
+    return (
+      <p className="text-center mt-10">
+        読み込み中...
+      </p>
+    );
   }
 
-  return (
+  // ----------------------
+  // error
+  // ----------------------
+  if (error) {
+    return (
+      <p className="text-center mt-10 text-red-500">
+        データ取得に失敗しました
+      </p>
+    );
+  }
 
-    
+  // ----------------------
+  // JSX
+  // ----------------------
+  return (
     <div className="min-h-screen flex flex-col items-center bg-blue-100 p-6">
 
-
-       <div className="w-full flex justify-start">
+      {/* 戻るボタン */}
+      <div className="w-full flex justify-start">
         <button
           onClick={() => router.push("/topic")}
           className="mb-6 px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
@@ -622,7 +763,7 @@ export default function SchoolsPage() {
                 </p>
               ) : (
                 <ul className="flex flex-col gap-2">
-                  {school.groups?.map((group) => (
+                  {school.groups.map((group) => (
                     <li
                       key={group.ID}
                       className="p-3 bg-blue-50 rounded-md border border-blue-200"
