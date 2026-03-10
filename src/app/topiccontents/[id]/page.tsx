@@ -3,19 +3,26 @@
 import { ParamValue } from "next/dist/server/request/params";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { initializeApp } from "firebase/app";
+// import { initializeApp } from "firebase/app";
 import { getAuth,onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, reload } from "firebase/auth";
 import { API_BASE_URL } from "../../api/api";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { firebaseConfig } from "../../firebaseconfig/firebase";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
-  authDomain: "share-info-project.firebaseapp.com",
-  projectId: "share-info-project",
-  storageBucket: "share-info-project.firebasestorage.app",
-  messagingSenderId: "10017220780",
-  appId: "1:10017220780:web:4820d384929f2d84735709",
-  measurementId: "G-42VYEZ51GF"
-};
+// const firebaseConfig = {
+//   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
+//   authDomain: "share-info-project.firebaseapp.com",
+//   projectId: "share-info-project",
+//   storageBucket: "share-info-project.firebasestorage.app",
+//   messagingSenderId: "10017220780",
+//   appId: "1:10017220780:web:4820d384929f2d84735709",
+//   measurementId: "G-42VYEZ51GF"
+// };
+
+// 既存の app があるか確認
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
+
 
 
 export default function Page() {
@@ -69,7 +76,7 @@ export default function Page() {
 
 const [comments, setComments] = useState<Comment[]>([]);
 
-  const app = initializeApp(firebaseConfig);
+  // const app = initializeApp(firebaseConfig);
 
   // function GetTopicdata(id: ParamValue) {
   //   fetch(`http://localhost:8080/topic_comment_only/${id}`, {

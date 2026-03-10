@@ -292,17 +292,328 @@
 
 
 
+// "use client";
+
+// import { useState } from "react";
+// import { useRouter } from "next/navigation";
+// import { getAuth } from "firebase/auth";
+// import { initializeApp } from "firebase/app";
+// import { firebaseConfig } from "../firebaseconfig/firebase";
+// import { API_BASE_URL } from "../api/api";
+// import useSWR from "swr";
+
+// initializeApp(firebaseConfig);
+
+// // ----------------------
+// // 型定義
+// // ----------------------
+// type School = {
+//   ID: number;
+//   SchoolName: string;
+//   CreatedAt: string;
+//   UpdatedAt: string;
+// };
+
+// type Topic = {
+//   ID: number;
+//   Year: number;
+//   UserID: number;
+//   TopicName: string;
+//   Content: string;
+//   Activate: boolean;
+//   Alert: boolean;
+//   CreatedAt: string;
+//   UpdatedAt: string;
+// };
+
+// // ----------------------
+// // SWR fetcher
+// // ----------------------
+// const fetcher = (url: string) =>
+//   fetch(url).then(res => res.json());
+
+// // ----------------------
+// // Main Component
+// // ----------------------
+// export default function Main() {
+//   const auth = getAuth();
+//   const router = useRouter();
+
+//   // ✅ 学校一覧（キャッシュされる）
+//   const {
+//     data: schoolData,
+//     isLoading: loadingSchools,
+//   } = useSWR(`${API_BASE_URL}/getSchools`, fetcher);
+
+//   const schools: School[] = schoolData?.schools ?? [];
+
+//   // ✅ トピック一覧（キャッシュされる）
+//   const {
+//     data: topicData,
+//     isLoading: loadingTopics,
+//     mutate,
+//   } = useSWR(`${API_BASE_URL}/topics`, fetcher);
+
+//   const results: Topic[] = topicData?.topics ?? [];
+
+//   // ----------------------
+//   // UI State
+//   // ----------------------
+//   const [topicName, setTopicName] = useState("");
+//   const [topicContent, setTopicContent] = useState("");
+//   const [showCreateForm, setShowCreateForm] = useState(false);
+
+//   // ----------------------
+//   // ページネーション
+//   // ----------------------
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const itemsPerPage = 20;
+//   const totalPages = Math.ceil(results.length / itemsPerPage);
+
+//   const displayedTopics = results.slice(
+//     (currentPage - 1) * itemsPerPage,
+//     currentPage * itemsPerPage
+//   );
+
+//   // ----------------------
+//   // routing
+//   // ----------------------
+//   const road_to_topic = (id: string) =>
+//     router.push("/topiccontents/" + id);
+
+//   const road_to_school = (id: number) =>
+//     router.push("/school_topic/" + id);
+
+//   // ----------------------
+//   // 投稿処理（SWR更新）
+//   // ----------------------
+//   const sendinfo = async () => {
+//     try {
+//       const user = auth.currentUser;
+//       if (!user) throw new Error("ユーザー未ログイン");
+
+//       const idToken = await user.getIdToken();
+
+//       const res = await fetch(`${API_BASE_URL}/topiccontent`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           name: topicName,
+//           content: topicContent,
+//           token: idToken,
+//         }),
+//       });
+
+//       if (!res.ok) throw new Error("トピック投稿失敗");
+
+//       // ✅ 再取得（reload不要）
+//       await mutate();
+
+//       setTopicName("");
+//       setTopicContent("");
+//       setShowCreateForm(false);
+
+//     } catch (err) {
+//       console.error("送信エラー:", err);
+//     }
+//   };
+
+//   const handlePrevPage = () =>
+//     setCurrentPage(prev => Math.max(prev - 1, 1));
+
+//   const handleNextPage = () =>
+//     setCurrentPage(prev => Math.min(prev + 1, totalPages));
+
+//   // ----------------------
+//   // JSX
+//   // ----------------------
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 p-6">
+//       <div className="max-w-7xl mx-auto flex gap-6">
+
+//         {/* ---------------- サイドバー ---------------- */}
+//         <aside className="w-1/5 bg-white shadow-xl rounded-2xl p-4 sticky top-6 h-[90vh] overflow-y-auto hide-scrollbar">
+//           <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">
+//             学校一覧
+//           </h2>
+
+//           {loadingSchools ? (
+//             <p className="text-center text-blue-600">読み込み中...</p>
+//           ) : schools.length === 0 ? (
+//             <p className="text-center text-blue-600">
+//               学校が登録されていません
+//             </p>
+//           ) : (
+//             <div className="flex flex-col gap-3">
+//               {schools.map(school => (
+//                 <button
+//                   key={school.ID}
+//                   onClick={() => road_to_school(school.ID)}
+//                   className="bg-white shadow-md hover:shadow-lg rounded-xl p-3 text-left text-blue-800 border border-blue-200 hover:bg-blue-50"
+//                 >
+//                   <div className="text-xl font-semibold">
+//                     {school.SchoolName}
+//                   </div>
+//                   <div className="text-sm text-blue-400 mt-1">
+//                     作成日:
+//                     {new Date(
+//                       school.CreatedAt
+//                     ).toLocaleDateString()}
+//                   </div>
+//                 </button>
+//               ))}
+//             </div>
+//           )}
+//         </aside>
+
+//         {/* ---------------- メイン ---------------- */}
+//         <main className="flex-1 flex gap-6">
+//           <div className="flex-1 flex flex-col gap-10">
+
+//             {/* 作成フォーム */}
+//             {showCreateForm && (
+//               <div className="bg-white shadow-xl rounded-2xl p-8 max-w-3xl mx-auto w-full">
+//                 <h2 className="text-2xl font-semibold mb-6 text-gray-700">
+//                   新しいトピックを作成
+//                 </h2>
+
+//                 <form
+//                   className="flex flex-col gap-4"
+//                   onSubmit={e => {
+//                     e.preventDefault();
+//                     sendinfo();
+//                   }}
+//                 >
+//                   <input
+//                     type="text"
+//                     placeholder="トピック名"
+//                     value={topicName}
+//                     onChange={e => setTopicName(e.target.value)}
+//                     className="border rounded-lg p-3"
+//                   />
+
+//                   <textarea
+//                     placeholder="内容"
+//                     value={topicContent}
+//                     onChange={e => setTopicContent(e.target.value)}
+//                     className="border rounded-lg p-3 h-28"
+//                   />
+
+//                   <button
+//                     type="submit"
+//                     className="bg-indigo-500 text-white py-3 rounded-lg"
+//                   >
+//                     投稿する
+//                   </button>
+//                 </form>
+//               </div>
+//             )}
+
+//             {/* トピック一覧 */}
+//             <div>
+//               <h2 className="text-2xl font-semibold mb-6 text-gray-700">
+//                 トピック一覧
+//               </h2>
+
+//               {loadingTopics ? (
+//                 <p className="text-center text-gray-500">
+//                   読み込み中...
+//                 </p>
+//               ) : results.length === 0 ? (
+//                 <p className="text-center text-gray-500">
+//                   まだ投稿がありません
+//                 </p>
+//               ) : (
+//                 <div className="flex flex-col gap-5">
+//                   {displayedTopics.map(topic => (
+//                     <div
+//                       key={topic.ID}
+//                       className="bg-white shadow-md rounded-xl p-6 hover:shadow-xl"
+//                     >
+//                       <button
+//                         className="text-left w-full"
+//                         onClick={() =>
+//                           road_to_topic(String(topic.ID))
+//                         }
+//                       >
+//                         <h3 className="text-xl font-bold text-indigo-600">
+//                           {topic.TopicName}
+//                         </h3>
+
+//                         <p className="text-gray-700 mt-2 whitespace-pre-line">
+//                           {topic.Content}
+//                         </p>
+//                       </button>
+//                     </div>
+//                   ))}
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+
+//           {/* 右サイド */}
+//           <div className="w-1/6 bg-white shadow-xl rounded-2xl p-4 h-fit sticky top-6 flex flex-col gap-4">
+//             <button
+//               className="bg-indigo-500 text-white py-3 rounded-lg"
+//               onClick={() =>
+//                 setShowCreateForm(prev => !prev)
+//               }
+//             >
+//               トピックを作成
+//             </button>
+
+//             <button
+//               className="bg-green-500 text-white py-3 rounded-lg"
+//               onClick={() => router.push("/schools")}
+//             >
+//               学校一覧
+//             </button>
+
+//             <button
+//               className="bg-green-500 text-white py-3 rounded-lg"
+//               onClick={() => router.push("/how_to_use")}
+//             >
+//               使い方
+//             </button>
+
+//             <button
+//               className="bg-green-500 text-white py-3 rounded-lg"
+//               onClick={() => router.push("/mypage")}
+//             >
+//               マイページへ
+//             </button>
+//           </div>
+
+//         </main>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAuth } from "firebase/auth";
-import { initializeApp } from "firebase/app";
+import { getAuth, User } from "firebase/auth";
+import { initializeApp,getApp,getApps } from "firebase/app";
 import { firebaseConfig } from "../firebaseconfig/firebase";
 import { API_BASE_URL } from "../api/api";
 import useSWR from "swr";
 
-initializeApp(firebaseConfig);
+// ----------------------
+// Firebase 初期化
+// ----------------------
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const auth = getAuth(app);
 
 // ----------------------
 // 型定義
@@ -310,8 +621,8 @@ initializeApp(firebaseConfig);
 type School = {
   ID: number;
   SchoolName: string;
-  CreatedAt: string;
-  UpdatedAt: string;
+  CreatedAt: string | null;
+  UpdatedAt: string | null;
 };
 
 type Topic = {
@@ -322,38 +633,37 @@ type Topic = {
   Content: string;
   Activate: boolean;
   Alert: boolean;
-  CreatedAt: string;
-  UpdatedAt: string;
+  CreatedAt: string | null;
+  UpdatedAt: string | null;
 };
 
 // ----------------------
 // SWR fetcher
 // ----------------------
-const fetcher = (url: string) =>
-  fetch(url).then(res => res.json());
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+  return res.json();
+};
 
 // ----------------------
 // Main Component
 // ----------------------
 export default function Main() {
-  const auth = getAuth();
   const router = useRouter();
 
   // ✅ 学校一覧（キャッシュされる）
-  const {
-    data: schoolData,
-    isLoading: loadingSchools,
-  } = useSWR(`${API_BASE_URL}/getSchools`, fetcher);
-
+  const { data: schoolData, isLoading: loadingSchools } = useSWR(
+    `${API_BASE_URL}/getSchools`,
+    fetcher
+  );
   const schools: School[] = schoolData?.schools ?? [];
 
   // ✅ トピック一覧（キャッシュされる）
-  const {
-    data: topicData,
-    isLoading: loadingTopics,
-    mutate,
-  } = useSWR(`${API_BASE_URL}/topics`, fetcher);
-
+  const { data: topicData, isLoading: loadingTopics, mutate } = useSWR(
+    `${API_BASE_URL}/topics`,
+    fetcher
+  );
   const results: Topic[] = topicData?.topics ?? [];
 
   // ----------------------
@@ -368,7 +678,7 @@ export default function Main() {
   // ----------------------
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-  const totalPages = Math.ceil(results.length / itemsPerPage);
+  const totalPages = Math.max(Math.ceil(results.length / itemsPerPage), 1);
 
   const displayedTopics = results.slice(
     (currentPage - 1) * itemsPerPage,
@@ -378,19 +688,19 @@ export default function Main() {
   // ----------------------
   // routing
   // ----------------------
-  const road_to_topic = (id: string) =>
-    router.push("/topiccontents/" + id);
-
-  const road_to_school = (id: number) =>
-    router.push("/school_topic/" + id);
+  const road_to_topic = (id: string) => router.push("/topiccontents/" + id);
+  const road_to_school = (id: number) => router.push("/school_topic/" + id);
 
   // ----------------------
   // 投稿処理（SWR更新）
   // ----------------------
   const sendinfo = async () => {
     try {
-      const user = auth.currentUser;
-      if (!user) throw new Error("ユーザー未ログイン");
+      const user: User | null = auth.currentUser;
+      if (!user) {
+        alert("ログインしてください");
+        return;
+      }
 
       const idToken = await user.getIdToken();
 
@@ -406,23 +716,19 @@ export default function Main() {
 
       if (!res.ok) throw new Error("トピック投稿失敗");
 
-      // ✅ 再取得（reload不要）
       await mutate();
 
       setTopicName("");
       setTopicContent("");
       setShowCreateForm(false);
-
     } catch (err) {
       console.error("送信エラー:", err);
+      alert("トピック投稿に失敗しました");
     }
   };
 
-  const handlePrevPage = () =>
-    setCurrentPage(prev => Math.max(prev - 1, 1));
-
-  const handleNextPage = () =>
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const handlePrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+  const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
 
   // ----------------------
   // JSX
@@ -433,16 +739,12 @@ export default function Main() {
 
         {/* ---------------- サイドバー ---------------- */}
         <aside className="w-1/5 bg-white shadow-xl rounded-2xl p-4 sticky top-6 h-[90vh] overflow-y-auto hide-scrollbar">
-          <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">
-            学校一覧
-          </h2>
+          <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">学校一覧</h2>
 
           {loadingSchools ? (
             <p className="text-center text-blue-600">読み込み中...</p>
           ) : schools.length === 0 ? (
-            <p className="text-center text-blue-600">
-              学校が登録されていません
-            </p>
+            <p className="text-center text-blue-600">学校が登録されていません</p>
           ) : (
             <div className="flex flex-col gap-3">
               {schools.map(school => (
@@ -451,14 +753,9 @@ export default function Main() {
                   onClick={() => road_to_school(school.ID)}
                   className="bg-white shadow-md hover:shadow-lg rounded-xl p-3 text-left text-blue-800 border border-blue-200 hover:bg-blue-50"
                 >
-                  <div className="text-xl font-semibold">
-                    {school.SchoolName}
-                  </div>
+                  <div className="text-xl font-semibold">{school.SchoolName}</div>
                   <div className="text-sm text-blue-400 mt-1">
-                    作成日:
-                    {new Date(
-                      school.CreatedAt
-                    ).toLocaleDateString()}
+                    作成日: {school.CreatedAt ? new Date(school.CreatedAt).toLocaleDateString() : "-"}
                   </div>
                 </button>
               ))}
@@ -473,10 +770,7 @@ export default function Main() {
             {/* 作成フォーム */}
             {showCreateForm && (
               <div className="bg-white shadow-xl rounded-2xl p-8 max-w-3xl mx-auto w-full">
-                <h2 className="text-2xl font-semibold mb-6 text-gray-700">
-                  新しいトピックを作成
-                </h2>
-
+                <h2 className="text-2xl font-semibold mb-6 text-gray-700">新しいトピックを作成</h2>
                 <form
                   className="flex flex-col gap-4"
                   onSubmit={e => {
@@ -491,18 +785,13 @@ export default function Main() {
                     onChange={e => setTopicName(e.target.value)}
                     className="border rounded-lg p-3"
                   />
-
                   <textarea
                     placeholder="内容"
                     value={topicContent}
                     onChange={e => setTopicContent(e.target.value)}
                     className="border rounded-lg p-3 h-28"
                   />
-
-                  <button
-                    type="submit"
-                    className="bg-indigo-500 text-white py-3 rounded-lg"
-                  >
+                  <button type="submit" className="bg-indigo-500 text-white py-3 rounded-lg">
                     投稿する
                   </button>
                 </form>
@@ -511,38 +800,18 @@ export default function Main() {
 
             {/* トピック一覧 */}
             <div>
-              <h2 className="text-2xl font-semibold mb-6 text-gray-700">
-                トピック一覧
-              </h2>
-
+              <h2 className="text-2xl font-semibold mb-6 text-gray-700">トピック一覧</h2>
               {loadingTopics ? (
-                <p className="text-center text-gray-500">
-                  読み込み中...
-                </p>
+                <p className="text-center text-gray-500">読み込み中...</p>
               ) : results.length === 0 ? (
-                <p className="text-center text-gray-500">
-                  まだ投稿がありません
-                </p>
+                <p className="text-center text-gray-500">まだ投稿がありません</p>
               ) : (
                 <div className="flex flex-col gap-5">
                   {displayedTopics.map(topic => (
-                    <div
-                      key={topic.ID}
-                      className="bg-white shadow-md rounded-xl p-6 hover:shadow-xl"
-                    >
-                      <button
-                        className="text-left w-full"
-                        onClick={() =>
-                          road_to_topic(String(topic.ID))
-                        }
-                      >
-                        <h3 className="text-xl font-bold text-indigo-600">
-                          {topic.TopicName}
-                        </h3>
-
-                        <p className="text-gray-700 mt-2 whitespace-pre-line">
-                          {topic.Content}
-                        </p>
+                    <div key={topic.ID} className="bg-white shadow-md rounded-xl p-6 hover:shadow-xl">
+                      <button className="text-left w-full" onClick={() => road_to_topic(String(topic.ID))}>
+                        <h3 className="text-xl font-bold text-indigo-600">{topic.TopicName}</h3>
+                        <p className="text-gray-700 mt-2 whitespace-pre-line">{topic.Content}</p>
                       </button>
                     </div>
                   ))}
@@ -555,31 +824,17 @@ export default function Main() {
           <div className="w-1/6 bg-white shadow-xl rounded-2xl p-4 h-fit sticky top-6 flex flex-col gap-4">
             <button
               className="bg-indigo-500 text-white py-3 rounded-lg"
-              onClick={() =>
-                setShowCreateForm(prev => !prev)
-              }
+              onClick={() => setShowCreateForm(prev => !prev)}
             >
               トピックを作成
             </button>
-
-            <button
-              className="bg-green-500 text-white py-3 rounded-lg"
-              onClick={() => router.push("/schools")}
-            >
+            <button className="bg-green-500 text-white py-3 rounded-lg" onClick={() => router.push("/schools")}>
               学校一覧
             </button>
-
-            <button
-              className="bg-green-500 text-white py-3 rounded-lg"
-              onClick={() => router.push("/how_to_use")}
-            >
+            <button className="bg-green-500 text-white py-3 rounded-lg" onClick={() => router.push("/how_to_use")}>
               使い方
             </button>
-
-            <button
-              className="bg-green-500 text-white py-3 rounded-lg"
-              onClick={() => router.push("/mypage")}
-            >
+            <button className="bg-green-500 text-white py-3 rounded-lg" onClick={() => router.push("/mypage")}>
               マイページへ
             </button>
           </div>
