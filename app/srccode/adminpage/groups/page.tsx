@@ -80,6 +80,7 @@ import { useRouter } from "next/navigation"
 import { getAuth, onAuthStateChanged, User } from "firebase/auth"
 import { initializeApp } from "firebase/app"
 import { firebaseConfig } from "../../firebaseconfig/firebase"
+import { API_BASE_URL } from "../../api/api";
 
 
 // Firebase 初期化
@@ -134,7 +135,8 @@ export default function AdminPage() {
 
     ;(async () => {
       try {
-        const res = await fetch("http://localhost:8080/admin/check", {
+        // const res = await fetch("http://localhost:8080/admin/check", {
+        const res = await fetch(`${API_BASE_URL}/admin/check`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -160,7 +162,8 @@ export default function AdminPage() {
 
     const fetchGroups = async () => {
       try {
-        const res = await fetch("http://localhost:8080/getAllGroup", {
+        // const res = await fetch("http://localhost:8080/getAllGroup", {
+        const res = await fetch(`${API_BASE_URL}/getAllGroup`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -182,7 +185,8 @@ export default function AdminPage() {
     if (!idToken) return
 
     try {
-      const res = await fetch(`http://localhost:8080/deleteGroup/${id}`, {
+      // const res = await fetch(`http://localhost:8080/deleteGroup/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/deleteGroup/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${idToken}` },
       })

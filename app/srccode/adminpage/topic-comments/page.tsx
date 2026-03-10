@@ -169,6 +169,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
+import { API_BASE_URL } from "../../api/api";
 
 // -----------------------------
 // Firebase 初期化
@@ -227,7 +228,8 @@ export default function AdminTopicCommentPage() {
       const idToken = await user.getIdToken();
 
       // 管理者チェック
-      const checkRes = await fetch("http://localhost:8080/admin/check", {
+      // const checkRes = await fetch("http://localhost:8080/admin/check", {
+      const checkRes = await fetch(`${API_BASE_URL}/admin/check`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -242,7 +244,8 @@ export default function AdminTopicCommentPage() {
       }
 
       // 管理者ならトピック取得
-      const topicRes = await fetch("http://localhost:8080/getAllTopic", {
+      // const topicRes = await fetch("http://localhost:8080/getAllTopic", {
+      const topicRes = await fetch(`${API_BASE_URL}/getAllTopic`, {
         method: "POST",
         headers: {
           Authorization: "Bearer " + idToken,
@@ -252,7 +255,8 @@ export default function AdminTopicCommentPage() {
       setTopics(topicData);
 
       // コメント取得
-      const commentRes = await fetch("http://localhost:8080/getAllTopicComments", {
+      // const commentRes = await fetch("http://localhost:8080/getAllTopicComments", {
+      const commentRes = await fetch(`${API_BASE_URL}/getAllTopicComments`, {
         method: "POST",
         headers: {
           Authorization: "Bearer " + idToken,
@@ -282,7 +286,7 @@ export default function AdminTopicCommentPage() {
     if (!currentUser) return;
     const idToken = await currentUser.getIdToken();
     try {
-      const res = await fetch(`http://localhost:8080/deleteTopic/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/deleteTopic/${id}`, {
         method: "DELETE",
         headers: { Authorization: "Bearer " + idToken },
       });
@@ -301,7 +305,7 @@ export default function AdminTopicCommentPage() {
     if (!currentUser) return;
     const idToken = await currentUser.getIdToken();
     try {
-      const res = await fetch(`http://localhost:8080/deleteTopicComment/${id}/${userID}`, {
+      const res = await fetch(`${API_BASE_URL}/deleteTopicComment/${id}/${userID}`, {
         method: "DELETE",
         headers: { Authorization: "Bearer " + idToken },
       });
@@ -320,7 +324,7 @@ export default function AdminTopicCommentPage() {
     if (!currentUser) return;
     const idToken = await currentUser.getIdToken();
     try {
-      const res = await fetch(`http://localhost:8080/editTopicComment/${id}/${userID}`, {
+      const res = await fetch(`${API_BASE_URL}/editTopicComment/${id}/${userID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + idToken },
         body: JSON.stringify({ content }),

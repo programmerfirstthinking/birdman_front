@@ -11,6 +11,7 @@ import {
   User 
 } from "firebase/auth";
 import { firebaseConfig } from "../firebaseconfig/firebase";
+import { API_BASE_URL } from "../api/api";
 
 
 // const firebaseConfig = {
@@ -43,7 +44,8 @@ export default function LoginPage() {
 
     const idToken = await user.getIdToken();
     try {
-      const res = await fetch("http://localhost:8080/login", {
+      // const res = await fetch("http://localhost:8080/login", {
+      const res = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -76,7 +78,8 @@ export default function LoginPage() {
       const idToken = await user.getIdToken();
 
       try {
-        const res = await fetch("http://localhost:8080/is_user_exist", {
+        // const res = await fetch("http://localhost:8080/is_user_exist", {
+        const res = await fetch(`${API_BASE_URL}/is_user_exist`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idToken }),

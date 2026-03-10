@@ -372,6 +372,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
+import { API_BASE_URL } from "../../api/api";
 
 // Firebase 初期化
 // const firebaseConfig = {
@@ -407,7 +408,8 @@ export default function AdminSchoolPage() {
       const idToken = await user.getIdToken();
 
       // 1️⃣ 管理者チェック
-      const checkRes = await fetch("http://localhost:8080/admin/check", {
+      // const checkRes = await fetch("http://localhost:8080/admin/check", {
+      const checkRes = await fetch(`${API_BASE_URL}/admin/check`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -422,7 +424,8 @@ export default function AdminSchoolPage() {
       }
 
       // 2️⃣ 学校一覧取得
-      const res = await fetch("http://localhost:8080/admin/schools", {
+      // const res = await fetch("http://localhost:8080/admin/schools", {
+      const res = await fetch(`${API_BASE_URL}/admin/schools`, {
         method: "GET",
         headers: {
           "Authorization": "Bearer " + idToken,
@@ -471,7 +474,8 @@ export default function AdminSchoolPage() {
 
     try {
       const idToken = await user.getIdToken();
-      const res = await fetch("http://localhost:8080/admin/schools", {
+      // const res = await fetch("http://localhost:8080/admin/schools", {
+      const res = await fetch(`${API_BASE_URL}/admin/schools`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -501,7 +505,7 @@ export default function AdminSchoolPage() {
 
     try {
       const idToken = await user.getIdToken();
-      const res = await fetch(`http://localhost:8080/admin/schools/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/admin/schools/${id}`, {
         method: "DELETE",
         headers: {
           "Authorization": "Bearer " + idToken,

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { initializeApp } from "firebase/app"
 import { getAuth, onAuthStateChanged } from "firebase/auth"
 import { firebaseConfig } from "../../firebaseconfig/firebase"
+import { API_BASE_URL } from "../../api/api";
 
 // Firebase 初期化
 // const firebaseConfig = {
@@ -28,7 +29,7 @@ export default function AdminUserPage() {
     try {
       const idToken = await user.getIdToken()
       // バックエンドに admin チェック
-      const checkRes = await fetch("http://localhost:8080/admin/check", {
+      const checkRes = await fetch(`${API_BASE_URL}/admin/check`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,7 +43,8 @@ export default function AdminUserPage() {
       }
 
       // 管理者ユーザー一覧取得
-      const res = await fetch("http://localhost:8080/adminusers", {
+      // const res = await fetch("http://localhost:8080/adminusers", {
+      const res = await fetch(`${API_BASE_URL}/adminusers`, {
         headers: { Authorization: "Bearer " + idToken },
       })
       const data = await res.json()
@@ -69,7 +71,8 @@ export default function AdminUserPage() {
 
     try {
       const token = await user.getIdToken()
-      await fetch("http://localhost:8080/adminusers/add", {
+      // await fetch("http://localhost:8080/adminusers/add", {
+      await fetch(`${API_BASE_URL}/adminusers/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,7 +94,7 @@ export default function AdminUserPage() {
     if (!user) return
     try {
       const token = await user.getIdToken()
-      await fetch(`http://localhost:8080/adminusers/${id}`, {
+      await fetch(`${API_BASE_URL}/adminusers/${id}`, {
         method: "DELETE",
         headers: { Authorization: "Bearer " + token },
       })

@@ -10,6 +10,7 @@ import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from
 import { initializeApp } from "firebase/app";
 import { useRouter } from "next/navigation";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
+import { API_BASE_URL } from "../../api/api";
 
 // const firebaseConfig = {
 //   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
@@ -101,7 +102,8 @@ export default function CreateGroup() {
     try {
       const idToken = await currentUser.getIdToken();
 
-      const res = await fetch("http://localhost:8080/getgroups", {
+      // const res = await fetch("http://localhost:8080/getgroups", {
+      const res = await fetch(`${API_BASE_URL}/getgroups`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -166,7 +168,8 @@ export default function CreateGroup() {
     try {
       const idToken = await currentUser.getIdToken();
       const payload: MakeGroupRequest = { groupName, idToken, schoolId };
-      const res = await fetch("http://localhost:8080/makegroup", {
+      // const res = await fetch("http://localhost:8080/makegroup", {
+      const res = await fetch(`${API_BASE_URL}/makegroup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -196,7 +199,8 @@ export default function CreateGroup() {
       idToken: idToken
     };
 
-    const res = await fetch("http://localhost:8080/editgroup", {
+    // const res = await fetch("http://localhost:8080/editgroup", {
+    const res = await fetch(`${API_BASE_URL}/editgroup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

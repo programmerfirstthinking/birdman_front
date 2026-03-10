@@ -10,6 +10,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
+import { API_BASE_URL } from "../../api/api";
 
 // 🔥 Firebase 設定
 // const firebaseConfig = {
@@ -160,7 +161,8 @@ const handleSend = async () => {
       pdfUrl: pdfUrl, // ★ これを追加
     };
 
-    const response = await fetch("http://localhost:8080/make_grouptopic", {
+    // const response = await fetch("http://localhost:8080/make_grouptopic", {
+    const response = await fetch(`${API_BASE_URL}/make_grouptopic`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

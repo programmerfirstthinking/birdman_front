@@ -91,6 +91,7 @@ import { useEffect, useState } from "react"
 import { initializeApp } from "firebase/app"
 import { getAuth, onAuthStateChanged } from "firebase/auth"
 import { firebaseConfig } from "../../firebaseconfig/firebase"
+import { API_BASE_URL } from "../../api/api";
 
 // Firebase 初期化
 // const firebaseConfig = {
@@ -129,7 +130,8 @@ export default function GroupContentsPage() {
       const idToken = await user.getIdToken()
 
       // バックエンドで管理者チェック
-      const checkRes = await fetch("http://localhost:8080/admin/check", {
+      // const checkRes = await fetch("http://localhost:8080/admin/check", {
+        const checkRes = await fetch(`${API_BASE_URL}/admin/check`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -143,7 +145,8 @@ export default function GroupContentsPage() {
       }
 
       // 管理者ならグループコンテンツ取得
-      const res = await fetch("http://localhost:8080/getAllGroupContents", {
+      // const res = await fetch("http://localhost:8080/getAllGroupContents", {
+      const res = await fetch(`${API_BASE_URL}/getAllGroupContents`, {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + idToken
@@ -171,7 +174,8 @@ export default function GroupContentsPage() {
     if (!currentUser) return
     try {
       const idToken = await currentUser.getIdToken()
-      const res = await fetch(`http://localhost:8080/deleteGroupContent/${id}`, {
+      // const res = await fetch(`http://localhost:8080/deleteGroupContent/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/deleteGroupContent/${id}`, {
         method: "DELETE",
         headers: { Authorization: "Bearer " + idToken },
       })

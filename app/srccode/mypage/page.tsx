@@ -919,6 +919,7 @@ import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 import { firebaseConfig } from "../firebaseconfig/firebase";
+import { API_BASE_URL } from "../api/api";
 
 // --- Firebase 設定 ---
 // const firebaseConfig = {
@@ -959,7 +960,8 @@ export default function ProfilePage() {
       try {
         const idToken = await firebaseUser.getIdToken(true);
 
-        const res = await fetch("http://localhost:8080/current_user", {
+        // const res = await fetch("http://localhost:8080/current_user", {
+        const res = await fetch(`${API_BASE_URL}/current_user`, {
           headers: { Authorization: `Bearer ${idToken}` },
         });
 
@@ -1015,7 +1017,8 @@ export default function ProfilePage() {
     if (!user) return;
 
     try {
-      const res = await fetch("http://localhost:8080/update_user", {
+      // const res = await fetch("http://localhost:8080/update_user", {
+      const res = await fetch(`${API_BASE_URL}/update_user`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

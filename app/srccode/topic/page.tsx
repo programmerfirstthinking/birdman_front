@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { getAuth } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 import { firebaseConfig } from "../firebaseconfig/firebase"
-
+import { API_BASE_URL } from "../api/api";
 // const firebaseConfig = {
 //   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
 //   authDomain: "share-info-project.firebaseapp.com",
@@ -62,7 +62,8 @@ export default function Main() {
   useEffect(() => {
     const fetchSchools = async () => {
       try {
-        const res = await fetch("http://localhost:8080/getSchools");
+        // const res = await fetch("http://localhost:8080/getSchools");
+        const res = await fetch(`${API_BASE_URL}/getSchools`);
         if (!res.ok) throw new Error("学校取得失敗");
         const data = await res.json();
         setSchools(Array.isArray(data.schools) ? data.schools : []);
@@ -80,7 +81,8 @@ export default function Main() {
   useEffect(() => {
     const fetchTopics = async () => {
       try {
-        const res = await fetch("http://localhost:8080/topics");
+        // const res = await fetch("http://localhost:8080/topics");
+        const res = await fetch(`${API_BASE_URL}/topics`);
         if (!res.ok) throw new Error("トピック取得失敗");
         const data = await res.json();
         setResults(data.topics || []);
@@ -103,7 +105,8 @@ export default function Main() {
       if (!user) throw new Error("ユーザー未ログイン");
       const idToken = await user.getIdToken();
 
-      const res = await fetch("http://localhost:8080/topiccontent", {
+      // const res = await fetch("http://localhost:8080/topiccontent", {
+      const res = await fetch(`${API_BASE_URL}/topiccontent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: topicName, content: topicContent, token: idToken }),

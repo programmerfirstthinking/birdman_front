@@ -9,6 +9,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
+import { API_BASE_URL } from "../../api/api";
 
 /* ================================
    Firebase 初期化
@@ -161,7 +162,8 @@ const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
 
     try {
       const idToken = await currentUser.getIdToken();
-      const res = await fetch("http://localhost:8080/see_groupcontent", {
+      // const res = await fetch("http://localhost:8080/see_groupcontent", {
+      const res = await fetch(`${API_BASE_URL}/see_groupcontent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: id, idToken }),
@@ -234,7 +236,8 @@ const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
                   if (!contentId || !currentUser) return;
                   try {
                     const idToken = await currentUser.getIdToken();
-                    const res = await fetch("http://localhost:8080/editSchoolContent", {
+                    // const res = await fetch("http://localhost:8080/editSchoolContent", {
+                    const res = await fetch(`${API_BASE_URL}/editSchoolContent`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
 import { getAuth,onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, reload } from "firebase/auth";
+import { API_BASE_URL } from "../../api/api";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
@@ -129,7 +130,7 @@ const [comments, setComments] = useState<Comment[]>([]);
         console.log("現在のユーザーのIDトークン:", idToken);
 
         const response = await fetch(
-          `http://localhost:8080/topic_comment_only/${id}`,
+          `${API_BASE_URL}/topic_comment_only/${id}`,
           {
             method: "GET",
             headers: {
@@ -198,7 +199,8 @@ const [comments, setComments] = useState<Comment[]>([]);
       console.log("現在のユーザーのIDトークン:", idToken);
 
 
-      const response = await fetch("http://localhost:8080/topic_comment", {
+      // const response = await fetch("http://localhost:8080/topic_comment", {
+      const response = await fetch(`${API_BASE_URL}/topic_comment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -282,7 +284,8 @@ const [comments, setComments] = useState<Comment[]>([]);
 
                 const idToken = await user.getIdToken();
 
-                await fetch("http://localhost:8080/edit_topic", {
+                // await fetch("http://localhost:8080/edit_topic", {
+                await fetch(`${API_BASE_URL}/edit_topic`, {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
@@ -327,7 +330,8 @@ const [comments, setComments] = useState<Comment[]>([]);
 
                         const idToken = await user.getIdToken();
 
-                        await fetch("http://localhost:8080/edit_topic_comment", {
+                        // await fetch("http://localhost:8080/edit_topic_comment", {
+                        await fetch(`${API_BASE_URL}/edit_topic_comment`, {
                           method: "PUT",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({

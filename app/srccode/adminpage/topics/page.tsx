@@ -100,6 +100,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
+import { API_BASE_URL } from "../../api/api";
 
 // -----------------------------
 // Firebase 初期化
@@ -147,7 +148,8 @@ export default function AdminTopicPage() {
       const idToken = await user.getIdToken();
 
       // 管理者チェック
-      const checkRes = await fetch("http://localhost:8080/admin/check", {
+      // const checkRes = await fetch("http://localhost:8080/admin/check", {
+      const checkRes = await fetch(`${API_BASE_URL}/admin/check`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -162,7 +164,8 @@ export default function AdminTopicPage() {
       }
 
       // 管理者ならトピック取得
-      const res = await fetch("http://localhost:8080/getAllTopic", {
+      // const res = await fetch("http://localhost:8080/getAllTopic", {
+      const res = await fetch(`${API_BASE_URL}/getAllTopic`, {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + idToken,
@@ -193,7 +196,8 @@ export default function AdminTopicPage() {
     const idToken = await currentUser.getIdToken();
 
     try {
-      const res = await fetch(`http://localhost:8080/deleteTopic/${id}`, {
+      // const res = await fetch(`http://localhost:8080/deleteTopic/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/deleteTopic/${id}`, {
         method: "DELETE",
         headers: { Authorization: "Bearer " + idToken },
       });

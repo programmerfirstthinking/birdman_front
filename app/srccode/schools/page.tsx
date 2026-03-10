@@ -528,6 +528,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "../api/api";
 
 type Group = {
   ID: number;
@@ -552,7 +553,8 @@ export default function SchoolsPage() {
   useEffect(() => {
     const fetchSchools = async () => {
       try {
-        const res = await fetch("http://localhost:8080/schools-with-groups");
+        // const res = await fetch("http://localhost:8080/schools-with-groups");
+        const res = await fetch(`${API_BASE_URL}/schools-with-groups`);
 
         if (!res.ok) {
           throw new Error("APIエラー");

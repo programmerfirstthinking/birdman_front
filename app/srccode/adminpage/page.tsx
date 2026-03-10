@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { getAuth, onAuthStateChanged } from "firebase/auth"
 import { initializeApp } from "firebase/app"
 import { firebaseConfig } from "../firebaseconfig/firebase"
+import { API_BASE_URL } from "../api/api";
 
 // Firebase 初期化
 // const firebaseConfig = {
@@ -45,7 +46,8 @@ export default function AdminPage() {
         const idToken = await currentUser.getIdToken()
 
         // Go バックエンドに送信して admin チェック
-        const res = await fetch("http://localhost:8080/admin/check", {
+        // const res = await fetch("http://localhost:8080/admin/check", {
+        const res = await fetch(`${API_BASE_URL}/admin/check`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

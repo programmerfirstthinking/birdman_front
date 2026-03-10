@@ -72,6 +72,7 @@ import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
+import { API_BASE_URL } from "../../api/api";
 
 // Firebase 初期化
 // const firebaseConfig = {
@@ -99,7 +100,8 @@ export default function PasswordManager() {
       const idToken = await user.getIdToken();
 
       // 管理者チェック
-      const checkRes = await fetch("http://localhost:8080/admin/check", {
+      // const checkRes = await fetch("http://localhost:8080/admin/check", {
+      const checkRes = await fetch(`${API_BASE_URL}/admin/check`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +115,8 @@ export default function PasswordManager() {
       }
 
       // 管理者ならパスワード取得
-      const res = await fetch("http://localhost:8080/getPassword", {
+      // const res = await fetch("http://localhost:8080/getPassword", {
+      const res = await fetch(`${API_BASE_URL}/getPassword`, {
         headers: {
           "Authorization": "Bearer " + idToken
         }
@@ -146,7 +149,8 @@ export default function PasswordManager() {
       const idToken = await currentUser.getIdToken();
 
       // バックエンドで管理者チェックは不要（loadPasswordで既に確認済み）
-      const res = await fetch("http://localhost:8080/setPassword", {
+      // const res = await fetch("http://localhost:8080/setPassword", {
+      const res = await fetch(`${API_BASE_URL}/setPassword`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

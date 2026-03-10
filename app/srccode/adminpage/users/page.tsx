@@ -286,6 +286,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
+import { API_BASE_URL } from "../../api/api";
 
 // -----------------------------
 // Firebase 初期化
@@ -336,7 +337,8 @@ export default function UsersPage() {
       const idToken = await user.getIdToken();
 
       // 管理者チェック
-      const checkRes = await fetch("http://localhost:8080/admin/check", {
+      // const checkRes = await fetch("http://localhost:8080/admin/check", {
+      const checkRes = await fetch(`${API_BASE_URL}/admin/check`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -351,7 +353,8 @@ export default function UsersPage() {
       }
 
       // 管理者ならユーザー一覧取得
-      const res = await fetch("http://localhost:8080/getAllUsers", {
+      // const res = await fetch("http://localhost:8080/getAllUsers", {
+      const res = await fetch(`${API_BASE_URL}/getAllUsers`, {
         method: "POST",
         headers: {
           Authorization: "Bearer " + idToken,
@@ -382,7 +385,8 @@ export default function UsersPage() {
     const idToken = await currentUser.getIdToken();
 
     try {
-      const res = await fetch("http://localhost:8080/updateUserSchoolID", {
+      // const res = await fetch("http://localhost:8080/updateUserSchoolID", {
+      const res = await fetch(`${API_BASE_URL}/updateUserSchoolID`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -415,7 +419,7 @@ export default function UsersPage() {
 
     const idToken = await currentUser.getIdToken();
     try {
-      const res = await fetch(`http://localhost:8080/deleteUser/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/deleteUser/${id}`, {
         method: "DELETE",
         headers: { Authorization: "Bearer " + idToken },
       });
