@@ -1,233 +1,277 @@
-"use client"; // Next.js 13 appディレクトリの場合
+"use client";
 import { useState, useEffect } from "react";
-// import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-// import { GoogleAuthProvider } from "firebase/auth";
-import { getAuth,onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, reload } from "firebase/auth";
-
-// Import the functions you need from the SDKs you need
+import { useRouter } from "next/navigation";
+import { getAuth } from "firebase/auth";
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { sign } from "crypto";
-// import { useRouter } from 'next/router';
-import { useRouter } from 'next/navigation';
+import { firebaseConfig } from "../firebaseconfig/firebase"
+import { API_BASE_URL } from "../api/api";
+// const firebaseConfig = {
+//   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
+//   authDomain: "share-info-project.firebaseapp.com",
+//   projectId: "share-info-project",
+//   storageBucket: "share-info-project.firebasestorage.app",
+//   messagingSenderId: "10017220780",
+//   appId: "1:10017220780:web:4820d384929f2d84735709",
+//   measurementId: "G-42VYEZ51GF"
+// };
+initializeApp(firebaseConfig);
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
-  authDomain: "share-info-project.firebaseapp.com",
-  projectId: "share-info-project",
-  storageBucket: "share-info-project.firebasestorage.app",
-  messagingSenderId: "10017220780",
-  appId: "1:10017220780:web:4820d384929f2d84735709",
-  measurementId: "G-42VYEZ51GF"
+type School = {
+  ID: number;
+  SchoolName: string;
+  CreatedAt: string;
+  UpdatedAt: string;
 };
 
-const app = initializeApp(firebaseConfig);
+type Topic = {
+  ID: number;
+  Year: number;
+  UserID: number;
+  TopicName: string;
+  Content: string;
+  Activate: boolean;
+  Alert: boolean;
+  CreatedAt: string;
+  UpdatedAt: string;
+};
 
 export default function Main() {
-
   const auth = getAuth();
-  const user = auth.currentUser;
-
-  // const [fetchData, setFetchData] = useState({});
-  // let topicdata ;
-
   const router = useRouter();
 
-  // const [data, setData] = useState<Record<string, any> | null>(null);
-  // const [results, setResults] = useState<Record<string, any> | null>(null);
-
-  type Topic = {
-    ID: number;
-    Year: number;
-    UserID: number;
-    TopicName: string;
-    Content: string;
-    Activate: boolean;
-    Alert: boolean;
-    CreatedAt: string;  // time.Time → stringで来る
-    UpdatedAt: string;
-  };
-
-const [results, setResults] = useState<Topic[]>([]);
-
-  async function fetchtopicdata() {
-    try {
-      const response = await fetch("http://localhost:8080/topics", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      // HTTPステータスチェック
-      if (!response.ok) {
-        console.error(`HTTPエラー: ${response.status} ${response.statusText}`);
-        return;
-      }
-
-      console.log("トピックデータの取得に成功");
-      console.log(response);
-
-      // const result = await response.json();
-      // console.log("取得したトピックデータをjsonに変換");
-      // console.log(result);
-
-      const result = await response.json();
-      setResults(result.topics); // ←ここ重要
-
-      // setData(result);
-      // setResults(result);
-
-      // console.log("データの一部を取り出し");
-      // console.log(result.topics[0]);
-
-    } catch (error) {
-      console.error("トピックデータの取得中にエラーが発生しました:", error);
-    }
-  }
-
-  useEffect(() => {
-      fetchtopicdata();
-  }, []);
-
-
+  const [schools, setSchools] = useState<School[]>([]);
+  const [results, setResults] = useState<Topic[]>([]);
+  const [loadingSchools, setLoadingSchools] = useState(true);
+  const [loadingTopics, setLoadingTopics] = useState(true);
 
   const [topicName, setTopicName] = useState("");
   const [topicContent, setTopicContent] = useState("");
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
-  async function sendinfo() {
-    try {
-      // 現在のユーザーのトークンを取得
+  // --- ページネーション用 ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+  const totalPages = Math.ceil(results.length / itemsPerPage);
 
-      const auth = getAuth();
-      const user = auth.currentUser;
+  const displayedTopics = results.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-
-      if (!user) {
-        console.error("ユーザーがログインしていません");
-        return;
+  // --- 学校一覧取得 ---
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        // const res = await fetch("http://localhost:8080/getSchools");
+        const res = await fetch(`${API_BASE_URL}/getSchools`);
+        if (!res.ok) throw new Error("学校取得失敗");
+        const data = await res.json();
+        setSchools(Array.isArray(data.schools) ? data.schools : []);
+      } catch (err) {
+        console.error("学校取得エラー:", err);
+        setSchools([]);
+      } finally {
+        setLoadingSchools(false);
       }
+    };
+    fetchSchools();
+  }, []);
 
+  // --- トピック一覧取得 ---
+  useEffect(() => {
+    const fetchTopics = async () => {
+      try {
+        // const res = await fetch("http://localhost:8080/topics");
+        const res = await fetch(`${API_BASE_URL}/topics`);
+        if (!res.ok) throw new Error("トピック取得失敗");
+        const data = await res.json();
+        setResults(data.topics || []);
+      } catch (err) {
+        console.error("トピック取得エラー:", err);
+        setResults([]);
+      } finally {
+        setLoadingTopics(false);
+      }
+    };
+    fetchTopics();
+  }, []);
+
+  const road_to_topic = (id: string) => router.push('/srccode/topiccontents/' + id);
+  const road_to_school = (id: number) => router.push('/srccode/school_topic/' + id);
+
+  const sendinfo = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("ユーザー未ログイン");
       const idToken = await user.getIdToken();
-      console.log("現在のユーザーのIDトークン:", idToken);
 
-      // POST リクエスト送信
-      const response = await fetch("http://localhost:8080/topiccontent", {
+      // const res = await fetch("http://localhost:8080/topiccontent", {
+      const res = await fetch(`${API_BASE_URL}/topiccontent`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: topicName, content: topicContent, token: idToken }),
       });
 
-      // HTTP ステータスチェック
-      if (!response.ok) {
-        console.error(`HTTPエラー: ${response.status} ${response.statusText}`);
-        return;
-      }
-
-      // レスポンスを JSON として取得
-      const data = await response.json();
-      console.log("トピックの送信に成功");
-      console.log(data);
-
-      // 必要であればページリロード
+      if (!res.ok) throw new Error("トピック投稿失敗");
+      await res.json();
       window.location.reload();
-
-    } catch (error) {
-      // トークン取得や fetch エラーをキャッチ
-      console.error("送信中にエラーが発生しました:", error);
+    } catch (err) {
+      console.error("送信エラー:", err);
     }
-  }
+  };
 
-  function road_to_topic(id : String) {
-
-    router.push('/srccode/topiccontents/' + id);
-  }
-
+  const handlePrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+  const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
 
   return (
-    <div>
-      <h2>トピックの作成はこちら</h2>
-        {/* <form  className="signup" method="POST"> */}
-        <div></div>
-        <form
-            className="signup"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              await sendinfo();
-            }}
-          >
-          <input
-            type="text"
-            name="topicname"
-            placeholder="トピック名"
-            value={topicName}
-            onChange={(e)=>setTopicName(e.target.value)}
-          />
-          <input
-            type="text"
-            name="topiccontent"
-            placeholder="内容"
-            value={topicContent}
-            onChange={(e)=>setTopicContent(e.target.value)}
-          />
-        <button type="submit">トピックの作成</button>
-      </form>
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 p-6">
 
-      <div>
-      {/* <button onClick={fetchData}>取得</button> */}
+{/* <h1 className="w-screen text-3xl font-bold text-white text-center py-4 bg-blue-700 shadow-md">
+  Birdman_Web
+</h1> */}
+      <div className="max-w-7xl mx-auto flex gap-6">
 
-
-        <div>
-          <div>テスと</div>
-          {/* {Object.entries(data).map(([key, value]) => (
-            <div key={key}>
-              <strong>{key}:</strong>{" "}
-              {typeof value === "object"
-                ? JSON.stringify(value)
-                : String(value)}
-            </div>
-          ))} */}
-          {/* {results.map((topic) => (
-            <div key={topic.id}>
-              <h3>{topic.name}</h3>
-              <p>{topic.content}</p>
-            </div>
-          ))} */}
-          <div>
-  <h2>トピック一覧</h2>
-
-            {results.length === 0 ? (
-              <p>まだ投稿がありません</p>
-            ) : (
-              results.map((topic) => (
-                <div
-                  key={topic.ID}
-                  style={{
-                    border: "1px solid gray",
-                    margin: "10px",
-                    padding: "10px",
-                  }}
+        {/* --- サイドバー: 学校一覧 --- */}
+        {/* <aside className="w-1/5 bg-white shadow-xl rounded-2xl p-4 h-fit sticky top-6"> */}
+        {/* <aside className="w-1/5 bg-white shadow-xl rounded-2xl p-4 sticky top-6 h-[90vh] overflow-y-auto"> */}
+        <aside className="w-1/5 bg-white shadow-xl rounded-2xl p-4 sticky top-6 h-[90vh] overflow-y-auto hide-scrollbar">
+          <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">学校一覧</h2>
+          {loadingSchools ? (
+            <p className="text-center text-blue-600">読み込み中...</p>
+          ) : schools.length === 0 ? (
+            <p className="text-center text-blue-600">学校が登録されていません</p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {schools.map(school => (
+                <button
+                  key={school.ID}
+                  onClick={() => road_to_school(school.ID)}
+                  className="bg-white shadow-md hover:shadow-lg rounded-xl p-3 text-left text-blue-800 border border-blue-200 hover:bg-blue-50"
                 >
-                  <button className={String(topic.ID)} onClick={() => road_to_topic(String(topic.ID))}>
-                    <h3>{topic.TopicName}</h3>
-                    <p>{topic.Content}</p>
+                  <div className="text-xl font-semibold">{school.SchoolName}</div>
+                  <div className="text-sm text-blue-400 mt-1">
+                    作成日: {new Date(school.CreatedAt).toLocaleDateString()}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </aside>
 
-                    <small>作成者ID: {topic.UserID}</small>
-                    <br />
-                    <small>
-                      作成日: {new Date(topic.CreatedAt).toLocaleString()}
-                    </small>
+        {/* --- メイン: トピック一覧 + 作成フォーム --- */}
+        <main className="flex-1 flex gap-6">
+
+          {/* --- 左側: トピック一覧 --- */}
+          <div className="flex-1 flex flex-col gap-10">
+
+            {/* --- トピック作成フォーム（表示/非表示） --- */}
+            {showCreateForm && (
+              <div className="bg-white shadow-xl rounded-2xl p-8 max-w-3xl mx-auto w-full">
+                <h2 className="text-2xl font-semibold mb-6 text-gray-700">新しいトピックを作成</h2>
+                <form className="flex flex-col gap-4" onSubmit={e => { e.preventDefault(); sendinfo(); }}>
+                  <input
+                    type="text"
+                    placeholder="トピック名"
+                    value={topicName}
+                    onChange={e => setTopicName(e.target.value)}
+                    className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
+                  <textarea
+                    placeholder="内容"
+                    value={topicContent}
+                    onChange={e => setTopicContent(e.target.value)}
+                    className="border border-gray-300 rounded-lg p-3 h-28 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-indigo-500 text-white py-3 rounded-lg font-semibold hover:bg-indigo-600 transition"
+                  >
+                    投稿する
                   </button>
-                </div>
-              ))
+                </form>
+              </div>
             )}
+
+            {/* トピック一覧 */}
+            <div>
+              <h2 className="text-2xl font-semibold mb-6 text-gray-700">トピック一覧</h2>
+              {loadingTopics ? (
+                <p className="text-center text-gray-500">読み込み中...</p>
+              ) : results.length === 0 ? (
+                <p className="text-center text-gray-500">まだ投稿がありません</p>
+              ) : (
+                <div className="flex flex-col gap-5">
+                  {displayedTopics.map(topic => (
+                    <div key={topic.ID} className="bg-white shadow-md rounded-xl p-6 hover:shadow-xl transition">
+                      <button className="text-left w-full" onClick={() => road_to_topic(String(topic.ID))}>
+                        <h3 className="text-xl font-bold text-indigo-600">{topic.TopicName}</h3>
+                        <p className="text-gray-700 mt-2 whitespace-pre-line">{topic.Content}</p>
+                        <div className="text-sm text-gray-400 mt-4">
+                          <div>作成者ID: {topic.UserID}</div>
+                          <div>作成日: {new Date(topic.CreatedAt).toLocaleString()}</div>
+                        </div>
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* ページネーションボタン */}
+                  {results.length > itemsPerPage && (
+                    <div className="flex justify-center gap-4 mt-4">
+                      <button
+                        onClick={handlePrevPage}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                      >
+                        前へ
+                      </button>
+                      <span className="px-2 py-2">
+                        {currentPage} / {totalPages}
+                      </span>
+                      <button
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                      >
+                        次へ
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        </div>
-      <div>
+
+          {/* --- 右側: 固定ボタン群 --- */}
+          <div className="w-1/6 bg-white shadow-xl rounded-2xl p-4 h-fit sticky top-6 flex flex-col gap-4">
+            <button
+              className="w-full bg-indigo-500 text-white py-3 rounded-lg font-semibold hover:bg-indigo-600 transition"
+              onClick={() => setShowCreateForm(prev => !prev)}
+            >
+              トピックを作成
+            </button>
+
+            <button
+              className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition"
+              onClick={() => router.push("/srccode/schools")}
+            >
+              学校一覧
+            </button>
+            <button
+              className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition"
+              onClick={() => router.push("/srccode/how_to_use")}
+            >
+              使い方
+            </button>
+            <button
+              className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition"
+              onClick={() => router.push("/srccode/mypage")}
+            >
+              マイページへ
+            </button>
+          </div>
+
+        </main>
+      </div>
     </div>
-    </div>
-  )
+  );
 }

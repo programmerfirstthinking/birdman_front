@@ -6,16 +6,17 @@ import { useRouter } from "next/navigation";
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { firebaseConfig } from "../firebaseconfig/firebase";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
-  authDomain: "share-info-project.firebaseapp.com",
-  projectId: "share-info-project",
-  storageBucket: "share-info-project.firebasestorage.app",
-  messagingSenderId: "10017220780",
-  appId: "1:10017220780:web:4820d384929f2d84735709",
-  measurementId: "G-42VYEZ51GF"
-};
+// const firebaseConfig = {
+//   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
+//   authDomain: "share-info-project.firebaseapp.com",
+//   projectId: "share-info-project",
+//   storageBucket: "share-info-project.firebasestorage.app",
+//   messagingSenderId: "10017220780",
+//   appId: "1:10017220780:web:4820d384929f2d84735709",
+//   measurementId: "G-42VYEZ51GF"
+// };
 
 // Firebase 初期化
 const app = initializeApp(firebaseConfig);
