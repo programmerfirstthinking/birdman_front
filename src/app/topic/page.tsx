@@ -96,8 +96,8 @@ export default function Main() {
     fetchTopics();
   }, []);
 
-  const road_to_topic = (id: string) => router.push('/srccode/topiccontents/' + id);
-  const road_to_school = (id: number) => router.push('/srccode/school_topic/' + id);
+  const road_to_topic = (id: string) => router.push('/topiccontents/' + id);
+  const road_to_school = (id: number) => router.push('/school_topic/' + id);
 
   const sendinfo = async () => {
     try {
@@ -252,19 +252,19 @@ export default function Main() {
 
             <button
               className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition"
-              onClick={() => router.push("/srccode/schools")}
+              onClick={() => router.push("/schools")}
             >
               学校一覧
             </button>
             <button
               className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition"
-              onClick={() => router.push("/srccode/how_to_use")}
+              onClick={() => router.push("/how_to_use")}
             >
               使い方
             </button>
             <button
               className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition"
-              onClick={() => router.push("/srccode/mypage")}
+              onClick={() => router.push("/mypage")}
             >
               マイページへ
             </button>

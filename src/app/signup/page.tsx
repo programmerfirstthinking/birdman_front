@@ -60,7 +60,7 @@ export default function LoginPage() {
       if (res.status === 200) {
         const data = await res.json();
         if (data.uid) {
-          router.push("/srccode/topic");
+          router.push("/topic");
         }
       }
     } catch (err) {
@@ -86,7 +86,7 @@ export default function LoginPage() {
         });
 
         if (res.status === 200) {
-          router.push("/srccode/topic");
+          router.push("/topic");
         }
       } catch (err) {
         console.error("ユーザー存在確認エラー:", err);

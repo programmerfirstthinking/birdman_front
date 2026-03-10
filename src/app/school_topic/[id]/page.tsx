@@ -230,7 +230,7 @@ export default function CreateGroup() {
 
   const handleAddContent = async (groupId: number) => {
 
-    router.push(`/srccode/makeSchoolTopic/${groupId}`);
+    router.push(`/makeSchoolTopic/${groupId}`);
   };
 
 
@@ -271,7 +271,7 @@ export default function CreateGroup() {
 
        <div className="w-full flex justify-start">
         <button
-          onClick={() => router.push("/srccode/topic")}
+          onClick={() => router.push("/topic")}
           className="mb-6 px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
         >
           ← ホームに戻る
@@ -384,7 +384,7 @@ export default function CreateGroup() {
                       >
                         <p className="font-semibold text-blue-700">トピック: {c.contentName}</p>
                         <button
-                          onClick={() => router.push(`/srccode/see_school_topic/${c.id}`)}
+                          onClick={() => router.push(`/see_school_topic/${c.id}`)}
                           className="mt-2 px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                         >
                           詳しくみる

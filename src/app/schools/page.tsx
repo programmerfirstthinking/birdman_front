@@ -574,7 +574,7 @@ export default function SchoolsPage() {
   }, []);
 
   function handleSchoolClick(id: number) {
-    router.push(`/srccode/school_topic/${id}`);
+    router.push(`/school_topic/${id}`);
   }
 
   if (loading) {
@@ -589,7 +589,7 @@ export default function SchoolsPage() {
 
        <div className="w-full flex justify-start">
         <button
-          onClick={() => router.push("/srccode/topic")}
+          onClick={() => router.push("/topic")}
           className="mb-6 px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
         >
           ← ホームに戻る
