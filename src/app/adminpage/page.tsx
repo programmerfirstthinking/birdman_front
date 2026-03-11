@@ -86,7 +86,9 @@ export default function AdminPage() {
         <button style={buttonStyle} onClick={() => router.push("/adminpage/schools")}>スクール</button>
         <button style={buttonStyle} onClick={() => router.push("/adminpage/users")}>ユーザー</button>
         <button style={buttonStyle} onClick={() => router.push("/adminpage/password")}>パスワード</button>
-         <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/adminuser")}>アドミンユーザー追加</button>
+        <button style={buttonStyle} onClick={() => router.push("/adminpage/school_group")}>スクールのグループ</button>
+        <button style={buttonStyle} onClick={() => router.push("/adminpage/school_topic")}>スクールトピック</button>
+        <button style={buttonStyle} onClick={() => router.push("/adminpage/adminuser")}>アドミンユーザー追加</button>
       </div>
     </div>
   )
