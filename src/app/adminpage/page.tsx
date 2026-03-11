@@ -79,13 +79,13 @@ export default function AdminPage() {
       <p>{message}</p>
 
       <div style={{ marginTop: "20px" }}>
-        <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/topics")}>トピック</button>
-        <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/topic-comments")}>トピックコメント</button>
-        <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/groups")}>グループ</button>
-        <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/grouptopics")}>グループトピック</button>
-        <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/schools")}>スクール</button>
-        <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/users")}>ユーザー</button>
-        <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/password")}>パスワード</button>
+        <button style={buttonStyle} onClick={() => router.push("/adminpage/topics")}>トピック</button>
+        <button style={buttonStyle} onClick={() => router.push("/adminpage/topic-comments")}>トピックコメント</button>
+        <button style={buttonStyle} onClick={() => router.push("/adminpage/groups")}>グループ</button>
+        <button style={buttonStyle} onClick={() => router.push("/adminpage/grouptopics")}>グループトピック</button>
+        <button style={buttonStyle} onClick={() => router.push("/adminpage/schools")}>スクール</button>
+        <button style={buttonStyle} onClick={() => router.push("/adminpage/users")}>ユーザー</button>
+        <button style={buttonStyle} onClick={() => router.push("/adminpage/password")}>パスワード</button>
          <button style={buttonStyle} onClick={() => router.push("/srccode/adminpage/adminuser")}>アドミンユーザー追加</button>
       </div>
     </div>
