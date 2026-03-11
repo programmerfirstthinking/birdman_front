@@ -6,11 +6,13 @@
 import React, { useState, useEffect } from "react";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
 import { API_BASE_URL } from "../../api/api";
+
+
 
 // 🔥 Firebase 設定
 // const firebaseConfig = {
@@ -70,44 +72,98 @@ const MarkdownImageUploader: React.FC = () => {
     }
   };
 
+  const handlePdfDelete = async () => {
+    if (!pdfUrl) return;
+
+    try {
+      const path = decodeURIComponent(pdfUrl.split("/o/")[1].split("?")[0]);
+      const storageRef = ref(storage, path);
+      await deleteObject(storageRef);
+      setPdfUrl("");
+      alert("PDFを削除しました");
+    } catch (err) {
+      console.error("PDF削除エラー:", err);
+      alert("PDFの削除に失敗しました");
+    }
+  };
+
   const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
     e.preventDefault();
     e.stopPropagation();
   };
 
+  // const handlePdfUpload = async (file: File) => {
+  // if (file.type !== "application/pdf") {
+  //   alert("PDFファイルのみアップロード可能です。");
+  //   return;
+  // }
+
+  // const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+  // if (file.size > MAX_SIZE) {
+  //   alert("PDFは10MB以下にしてください。");
+  //   return;
+  // }
+
+  // try {
+  //   setUploadingPdf(true);
+
+  //   const storageRef = ref(
+  //     storage,
+  //     `pdfs/${Date.now()}_${file.name}`
+  //   );
+
+  //   await uploadBytes(storageRef, file);
+  //   const url = await getDownloadURL(storageRef);
+
+  //   setPdfUrl(url);
+  //   alert("PDFアップロード成功！");
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("PDFアップロードに失敗しました");
+  //   } finally {
+  //     setUploadingPdf(false);
+  //   }
+
+  // };
+
   const handlePdfUpload = async (file: File) => {
-  if (file.type !== "application/pdf") {
-    alert("PDFファイルのみアップロード可能です。");
-    return;
-  }
+      if (file.type !== "application/pdf") {
+        alert("PDFファイルのみアップロード可能です。");
+        return;
+      }
 
-  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-  if (file.size > MAX_SIZE) {
-    alert("PDFは10MB以下にしてください。");
-    return;
-  }
+      // ★ 既にPDFがアップロードされている場合はブロック
+      if (pdfUrl) {
+        alert("すでにPDFがアップロードされています。削除してから再アップロードしてください。");
+        return;
+      }
 
-  try {
-    setUploadingPdf(true);
+      const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+      if (file.size > MAX_SIZE) {
+        alert("PDFは10MB以下にしてください。");
+        return;
+      }
 
-    const storageRef = ref(
-      storage,
-      `pdfs/${Date.now()}_${file.name}`
-    );
+      try {
+        setUploadingPdf(true);
 
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
+        const storageRef = ref(
+          storage,
+          `pdfs/${Date.now()}_${file.name}`
+        );
 
-    setPdfUrl(url);
-    alert("PDFアップロード成功！");
-    } catch (err) {
-      console.error(err);
-      alert("PDFアップロードに失敗しました");
-    } finally {
-      setUploadingPdf(false);
-    }
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
 
-  };
+        setPdfUrl(url);
+        alert("PDFアップロード成功！");
+      } catch (err) {
+        console.error(err);
+        alert("PDFアップロードに失敗しました");
+      } finally {
+        setUploadingPdf(false);
+      }
+    };
 
 
     const handlePdfDrop = async (e: React.DragEvent<HTMLDivElement>) => {
@@ -228,7 +284,7 @@ const handleSend = async () => {
           className="mb-6 p-6 text-center border-2 border-dashed border-blue-300 rounded-xl bg-blue-50 hover:bg-blue-100 transition"
         >
           <p className="text-blue-700 text-lg mb-2">📄 ここにPDFをドラッグ＆ドロップしよう</p>
-          <p className="text-blue-500 mb-4">または</p>
+          <p className="text-blue-500 mb-4">もしくは</p>
           <label className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition">
             ファイルを選択
             <input
@@ -241,7 +297,7 @@ const handleSend = async () => {
 
           {uploadingPdf && <p className="text-blue-500 mt-2">アップロード中...</p>}
 
-          {pdfUrl && (
+          {/* {pdfUrl && (
             <div className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-100 flex items-center justify-between">
               <span className="text-blue-700 font-medium">✅ アップロード済み</span>
               <a
@@ -252,6 +308,28 @@ const handleSend = async () => {
               >
                 PDFを確認する
               </a>
+            </div>
+          )} */}
+
+          {pdfUrl && (
+            <div className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-100 flex items-center justify-between gap-2">
+              <span className="text-blue-700 font-medium">✅ アップロード済み</span>
+              <div className="flex gap-2">
+                <a
+                  href={pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+                >
+                  PDFを確認
+                </a>
+                <button
+                  onClick={handlePdfDelete}
+                  className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm"
+                >
+                  削除
+                </button>
+              </div>
             </div>
           )}
         </div>
