@@ -1303,6 +1303,32 @@ export default function SchoolsPage() {
     e.stopPropagation();
   };
 
+  // 削除ボタン用ハンドラー
+  // const handleDelete = async () => {
+  //   if (!contentId || !currentUser) return;
+
+  //   if (!confirm("本当にこのグループコンテンツを削除しますか？")) return;
+
+  //   try {
+  //     const idToken = await currentUser.getIdToken();
+  //     const res = await fetch(`${API_BASE_URL}/group_contents/${contentId}`, {
+  //       method: "DELETE",
+  //       headers: {
+  //         "Authorization": `Bearer ${idToken}`,
+  //       },
+  //     });
+
+  //     if (!res.ok) throw new Error("削除に失敗しました");
+
+  //     alert("グループコンテンツを削除しました");
+  //     // 削除後にリダイレクトや一覧に戻る処理
+  //     window.location.href = "/schools"; // 適宜戻るURLに変更
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("削除に失敗しました");
+  //   }
+  // };
+
   const handlePdfDelete = async () => {
     const targetUrl = pdfUrl || responseData?.data.pdf_url;
     if (!targetUrl || !contentId || !currentUser) return;
@@ -1329,6 +1355,53 @@ export default function SchoolsPage() {
     } catch (err) {
       console.error(err);
       alert("PDF削除に失敗しました");
+    }
+  };
+
+    const handleDelete = async () => {
+    if (!contentId || !currentUser) return;
+
+    if (!confirm("本当にこのグループコンテンツを削除しますか？")) return;
+
+    try {
+      const idToken = await currentUser.getIdToken();
+
+      // ① PDFが存在する場合はStorageから削除
+      if (pdfUrl) {
+        try {
+          const path = decodeURIComponent(pdfUrl.split("/o/")[1].split("?")[0]);
+          const storageRef = ref(storage, path);
+          await deleteObject(storageRef);
+
+          // DB側も pdf_url を空にする
+          await fetch(`${API_BASE_URL}/delete_pdf`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: contentId, idToken }),
+          });
+
+          console.log("PDFを削除しました");
+        } catch (err) {
+          console.error("PDF削除に失敗:", err);
+          alert("PDF削除に失敗しましたが、コンテンツ自体は削除します");
+        }
+      }
+
+      // ② グループコンテンツ自体を削除
+      const res = await fetch(`${API_BASE_URL}/group_contents/${contentId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${idToken}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("グループコンテンツ削除に失敗しました");
+
+      alert("グループコンテンツを削除しました");
+      window.location.href = "/schools"; // 適宜一覧ページに戻す
+    } catch (err) {
+      console.error(err);
+      alert("削除に失敗しました");
     }
   };
 
@@ -1377,17 +1450,26 @@ export default function SchoolsPage() {
         <h2 className="flex items-center justify-between text-2xl font-bold text-blue-800 mb-6">
           スクールトピックですよ
           {responseData.current_user?.id === responseData.data.user_id && !isEditing && (
-            <button
-              onClick={() => {
-                setContentName(responseData.data.group_contents_name);
-                setMarkdown(responseData.data.content ?? "");
-                setPdfUrl(responseData.data.pdf_url ?? "");
-                setIsEditing(true);
-              }}
-              className="ml-auto bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-lg transition"
-            >
-              編集
-            </button>
+            <div>
+              <button
+                onClick={() => {
+                  setContentName(responseData.data.group_contents_name);
+                  setMarkdown(responseData.data.content ?? "");
+                  setPdfUrl(responseData.data.pdf_url ?? "");
+                  setIsEditing(true);
+                }}
+                className="ml-auto bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-lg transition"
+              >
+                編集
+              </button>
+              <button
+                onClick={handleDelete}
+                className="ml-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition"
+              >
+                削除
+              </button>
+            </div>
+            
           )}
         </h2>
 

@@ -8,6 +8,7 @@ import { getAuth,onAuthStateChanged, signInWithPopup, GoogleAuthProvider, create
 import { API_BASE_URL } from "../../api/api";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
+import { useRouter } from "next/navigation"
 
 // const firebaseConfig = {
 //   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
@@ -26,6 +27,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 
 export default function Page() {
+  const router = useRouter(); // コンポーネント内で
   const params = useParams();
   const id = params.id;
 
@@ -268,17 +270,138 @@ const [comments, setComments] = useState<Comment[]>([]);
           </div>
 
           {/* 編集ボタン */}
+          {/* {currentUser && results?.UserID === currentUser.id && !isEditing && (
+            <div>
+                <button
+                  onClick={() => {
+                    setIsEditing(true);
+                    setEditTitle(results?.TopicName || "");
+                    setEditContent(results?.Content || "");
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                >
+                  編集
+                </button>
+                <button>削除</button>
+
+            </div>
+            
+            
+          )} */}
+
+          {/* 編集ボタンと削除ボタン */}
           {currentUser && results?.UserID === currentUser.id && !isEditing && (
-            <button
-              onClick={() => {
-                setIsEditing(true);
-                setEditTitle(results?.TopicName || "");
-                setEditContent(results?.Content || "");
-              }}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-            >
-              編集
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setIsEditing(true);
+                  setEditTitle(results?.TopicName || "");
+                  setEditContent(results?.Content || "");
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              >
+                編集
+              </button>
+
+              {/* <button
+                onClick={async () => {
+                  const auth = getAuth();
+                  const user = auth.currentUser;
+                  if (!user) return;
+
+                  const idToken = await user.getIdToken();
+
+                  if (!confirm("本当にこのグループを削除しますか？")) return;
+
+                  try {
+                    // DELETE /groups/:id へリクエスト
+                    const res = await fetch(`${API_BASE_URL}/groups/${id}`, {
+                      method: "DELETE",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${idToken}`, // 認証トークン
+                      },
+                    });
+
+                    if (!res.ok) {
+                      const errData = await res.json();
+                      console.error("削除エラー:", errData);
+                      alert(errData.error || "グループ削除に失敗しました");
+                      return;
+                    }
+
+                    // 削除成功
+                    alert("グループを削除しました");
+                    router.push("/topic")
+                    
+                    // グループ一覧ページなどへ遷移
+                    // window.location.href = "/groups"; // 必要に応じて変更
+                  } catch (err) {
+                    console.error("グループ削除エラー:", err);
+                    alert("グループ削除に失敗しました");
+                  }
+                }}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+              >
+                削除
+              </button> */}
+              <button
+                onClick={async () => {
+                  // 1. ID が存在するか確認
+                  if (!id) {
+                    alert("削除対象のトピックIDが取得できていません");
+                    return;
+                  }
+
+                  // 2. 確認ダイアログ
+                  if (!confirm("本当にこのトピックを削除しますか？")) return;
+
+                  try {
+                    // 3. Firebase 現在ユーザーとトークン取得
+                    const auth = getAuth();
+                    const user = auth.currentUser;
+                    if (!user) {
+                      alert("ログインしていません");
+                      return;
+                    }
+
+                    const idToken = await user.getIdToken();
+
+                    // 4. バックエンドの DELETE エンドポイント
+                    const deleteUrl = `${API_BASE_URL.replace(/\/$/, "")}/deleteTopic/${id}`;
+                    console.log("DELETE URL:", deleteUrl);
+
+                    // 5. DELETE リクエスト送信
+                    const res = await fetch(deleteUrl, {
+                      method: "DELETE",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${idToken}`, // Firebase トークン
+                      },
+                    });
+
+                    // 6. レスポンスチェック
+                    if (!res.ok) {
+                      const errData = await res.json();
+                      console.error("削除エラー:", errData);
+                      alert(errData.error || "トピック削除に失敗しました");
+                      return;
+                    }
+
+                    // 7. 削除成功
+                    alert("トピックを削除しました");
+                    router.push("/topic"); // トピック一覧ページへ遷移
+
+                  } catch (err) {
+                    console.error("トピック削除エラー:", err);
+                    alert("トピック削除に失敗しました");
+                  }
+                }}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+              >
+                削除
+              </button>
+            </div>
           )}
 
           {/* 保存ボタン（編集時のみ） */}

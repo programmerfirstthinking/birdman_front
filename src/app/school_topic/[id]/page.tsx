@@ -1023,13 +1023,65 @@ export default function CreateGroup() {
                 </p>
 
                 <div className="flex gap-3 flex-wrap mb-4">
+                  {/* {loginUserId === g.userId && editingGroupId !== g.id && (
+                    <div>
+                      <button
+                        onClick={() => { setEditingGroupId(g.id); setEditingGroupName(g.groupName); }}
+                        className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                      >
+                        編集
+                      </button>
+                      <button>
+                        削除
+                      </button>
+                    </div>
+           
+                  )} */}
+
                   {loginUserId === g.userId && editingGroupId !== g.id && (
-                    <button
-                      onClick={() => { setEditingGroupId(g.id); setEditingGroupName(g.groupName); }}
-                      className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
-                    >
-                      編集
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setEditingGroupId(g.id); setEditingGroupName(g.groupName); }}
+                        className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                      >
+                        編集
+                      </button>
+
+                      <button
+                        onClick={async () => {
+                          if (!currentUser) return;
+                          if (!confirm("本当にこのグループを削除しますか？")) return;
+
+                          try {
+                            const idToken = await currentUser.getIdToken();
+                            const res = await fetch(`${API_BASE_URL}/groups/${g.id}`, {
+                              method: "DELETE",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${idToken}`, // 認証が必要なら
+                              },
+                            });
+
+                            if (!res.ok) {
+                              const errData = await res.json();
+                              console.error("削除失敗:", errData);
+                              alert(errData.error || "グループ削除に失敗しました");
+                              return;
+                            }
+
+                            alert("グループを削除しました");
+                            await mutate(); // SWRで最新データに更新
+
+                          } catch (err) {
+                            console.error("削除エラー:", err);
+                            alert("グループ削除に失敗しました");
+                          }
+                        }}
+                        className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                      >
+                        削除
+                      </button>
+                    </div>
                   )}
 
                   {backendSchoolId === schoolId && (

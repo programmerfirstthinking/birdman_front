@@ -170,6 +170,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
 import { API_BASE_URL } from "../../api/api";
+// import { useRouter } from "next/navigation"
 
 // -----------------------------
 // Firebase 初期化
