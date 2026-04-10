@@ -1444,11 +1444,180 @@ export default function SchoolsPage() {
 
   const contentParts = parseContent(isEditing ? markdown : responseData.data.content ?? "");
 
+  // return (
+  //   <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 flex justify-center font-sans">
+  //     <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg p-6">
+  //       <h2 className="flex items-center justify-between text-2xl font-bold text-blue-800 mb-6">
+  //         スクールトピックですよ
+  //         {responseData.current_user?.id === responseData.data.user_id && !isEditing && (
+  //           <div>
+  //             <button
+  //               onClick={() => {
+  //                 setContentName(responseData.data.group_contents_name);
+  //                 setMarkdown(responseData.data.content ?? "");
+  //                 setPdfUrl(responseData.data.pdf_url ?? "");
+  //                 setIsEditing(true);
+  //               }}
+  //               className="ml-auto bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-lg transition"
+  //             >
+  //               編集
+  //             </button>
+  //             <button
+  //               onClick={handleDelete}
+  //               className="ml-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition"
+  //             >
+  //               削除
+  //             </button>
+  //           </div>
+            
+  //         )}
+  //       </h2>
+
+  //       {isEditing && (
+  //         <>
+  //           <input
+  //             type="text"
+  //             value={contentName}
+  //             onChange={(e) => setContentName(e.target.value)}
+  //             className="w-full mb-4 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+  //             placeholder="コンテンツ名"
+  //           />
+  //           <textarea
+  //             value={markdown}
+  //             onChange={(e) => setMarkdown(e.target.value)}
+  //             onDrop={handleDrop}
+  //             onDragOver={handleDragOver}
+  //             className="w-full h-48 mb-4 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+  //             placeholder="Markdown本文を入力…（画像をドラッグ＆ドロップ可能）"
+  //           />
+
+  //           {pdfUrl && (
+  //             <div className="flex items-center justify-between gap-2 p-4 mb-4 border border-blue-300 bg-blue-50 rounded-lg">
+  //               <span className="text-2xl">📄</span>
+  //               <span className="flex-1 text-blue-700">PDFファイル</span>
+  //               <div className="flex gap-2">
+  //                 <a
+  //                   href={pdfUrl}
+  //                   target="_blank"
+  //                   rel="noopener noreferrer"
+  //                   className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+  //                 >
+  //                   ダウンロード
+  //                 </a>
+  //                 <button
+  //                   onClick={handlePdfDelete}
+  //                   className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm"
+  //                 >
+  //                   削除
+  //                 </button>
+  //               </div>
+  //             </div>
+  //           )}
+
+  //           <div className="flex gap-4">
+  //             <button
+  //               onClick={async () => {
+  //                 if (!contentId || !currentUser) return;
+  //                 try {
+  //                   const idToken = await currentUser.getIdToken();
+  //                   const res = await fetch(`${API_BASE_URL}/editSchoolContent`, {
+  //                     method: "POST",
+  //                     headers: { "Content-Type": "application/json" },
+  //                     body: JSON.stringify({
+  //                       id: contentId,
+  //                       group_contents_name: contentName,
+  //                       content: markdown,
+  //                       pdf_url: pdfUrl,
+  //                       idToken,
+  //                     }),
+  //                   });
+  //                   if (!res.ok) throw new Error("更新に失敗しました");
+
+  //                   const data: ApiResponse = await res.json();
+  //                   setResponseData(data);
+  //                   setIsEditing(false);
+  //                 } catch (err) {
+  //                   console.error(err);
+  //                   alert("更新に失敗しました");
+  //                 }
+  //               }}
+  //               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+  //             >
+  //               更新
+  //             </button>
+  //             <button
+  //               onClick={() => setIsEditing(false)}
+  //               className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition"
+  //             >
+  //               キャンセル
+  //             </button>
+  //           </div>
+  //         </>
+  //       )}
+
+  //       {!isEditing && pdfUrl && (
+  //         <div className="flex items-center justify-between gap-2 p-4 mb-4 border border-blue-300 bg-blue-50 rounded-lg">
+  //           <span className="text-2xl">📄</span>
+  //           <span className="flex-1 text-blue-700">PDFファイル</span>
+  //           <a
+  //             href={pdfUrl}
+  //             target="_blank"
+  //             rel="noopener noreferrer"
+  //             className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+  //           >
+  //             ダウンロード
+  //           </a>
+  //         </div>
+  //       )}
+
+  //       <div className="border border-blue-200 p-4 rounded-lg bg-blue-50">
+  //         <ReactMarkdown
+  //           remarkPlugins={[remarkGfm]}
+  //           components={{
+  //             img: ({ node, ...props }) => (
+  //               <img
+  //                 {...props}
+  //                 style={{ maxWidth: "100%", margin: "8px 0", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+  //                 alt=""
+  //               />
+  //             ),
+  //             a: ({ node, ...props }) => {
+  //               if (props.href?.endsWith(".pdf")) {
+  //                 const name = React.Children.toArray(props.children)[0]?.toString() || "PDFファイル";
+  //                 return (
+  //                   <div className="flex items-center gap-2 p-3 mb-3 border border-blue-300 bg-blue-100 rounded-lg">
+  //                     <span className="text-2xl">📄</span>
+  //                     <span className="flex-1 text-blue-700">{name}</span>
+  //                     <a
+  //                       href={props.href}
+  //                       target="_blank"
+  //                       rel="noopener noreferrer"
+  //                       className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+  //                     >
+  //                       ダウンロード
+  //                     </a>
+  //                   </div>
+  //                 );
+  //               }
+  //               return <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" />;
+  //             },
+  //           }}
+  //         >
+  //           {responseData.data.content ?? ""}
+  //         </ReactMarkdown>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 flex justify-center font-sans">
       <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg p-6">
+
+        {/* タイトル + 操作 */}
         <h2 className="flex items-center justify-between text-2xl font-bold text-blue-800 mb-6">
-          スクールトピックですよ
+          スクールトピック
+
           {responseData.current_user?.id === responseData.data.user_id && !isEditing && (
             <div>
               <button
@@ -1462,6 +1631,7 @@ export default function SchoolsPage() {
               >
                 編集
               </button>
+
               <button
                 onClick={handleDelete}
                 className="ml-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition"
@@ -1469,85 +1639,99 @@ export default function SchoolsPage() {
                 削除
               </button>
             </div>
-            
           )}
         </h2>
 
-        {isEditing && (
-          <>
+        {/* コンテンツ名 */}
+        <div className="mb-4">
+          <h3 className="text-blue-700 font-semibold mb-1">コンテンツ名</h3>
+
+          {isEditing ? (
             <input
               type="text"
               value={contentName}
               onChange={(e) => setContentName(e.target.value)}
-              className="w-full mb-4 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="コンテンツ名"
+              className="w-full p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400"
             />
+          ) : (
+            <div className="text-blue-800 font-medium">
+              {responseData.data.group_contents_name}
+            </div>
+          )}
+        </div>
+
+        {/* PDF（編集時） */}
+        {isEditing && pdfUrl && (
+          <div className="flex items-center justify-between gap-2 p-4 mb-4 border border-blue-300 bg-blue-50 rounded-lg">
+            <span className="text-2xl">📄</span>
+            <span className="flex-1 text-blue-700">PDFファイル</span>
+            <div className="flex gap-2">
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm"
+              >
+                ダウンロード
+              </a>
+              <button
+                onClick={handlePdfDelete}
+                className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm"
+              >
+                削除
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 編集UI */}
+        {isEditing && (
+          <>
             <textarea
               value={markdown}
               onChange={(e) => setMarkdown(e.target.value)}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              className="w-full h-48 mb-4 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-              placeholder="Markdown本文を入力…（画像をドラッグ＆ドロップ可能）"
+              className="w-full h-48 mb-4 p-3 border border-blue-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Markdown本文を入力（画像ドラッグ可）"
             />
 
-            {pdfUrl && (
-              <div className="flex items-center justify-between gap-2 p-4 mb-4 border border-blue-300 bg-blue-50 rounded-lg">
-                <span className="text-2xl">📄</span>
-                <span className="flex-1 text-blue-700">PDFファイル</span>
-                <div className="flex gap-2">
-                  <a
-                    href={pdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-                  >
-                    ダウンロード
-                  </a>
-                  <button
-                    onClick={handlePdfDelete}
-                    className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm"
-                  >
-                    削除
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-4">
+            <div className="flex gap-4 mb-6">
               <button
                 onClick={async () => {
                   if (!contentId || !currentUser) return;
-                  try {
-                    const idToken = await currentUser.getIdToken();
-                    const res = await fetch(`${API_BASE_URL}/editSchoolContent`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        id: contentId,
-                        group_contents_name: contentName,
-                        content: markdown,
-                        pdf_url: pdfUrl,
-                        idToken,
-                      }),
-                    });
-                    if (!res.ok) throw new Error("更新に失敗しました");
 
-                    const data: ApiResponse = await res.json();
-                    setResponseData(data);
-                    setIsEditing(false);
-                  } catch (err) {
-                    console.error(err);
-                    alert("更新に失敗しました");
+                  const idToken = await currentUser.getIdToken();
+
+                  const res = await fetch(`${API_BASE_URL}/editSchoolContent`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      id: contentId,
+                      group_contents_name: contentName,
+                      content: markdown,
+                      pdf_url: pdfUrl,
+                      idToken,
+                    }),
+                  });
+
+                  if (!res.ok) {
+                    alert("更新失敗");
+                    return;
                   }
+
+                  const data: ApiResponse = await res.json();
+                  setResponseData(data);
+                  setIsEditing(false);
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
               >
                 更新
               </button>
+
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition"
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg"
               >
                 キャンセル
               </button>
@@ -1555,6 +1739,7 @@ export default function SchoolsPage() {
           </>
         )}
 
+        {/* PDF（表示モード） */}
         {!isEditing && pdfUrl && (
           <div className="flex items-center justify-between gap-2 p-4 mb-4 border border-blue-300 bg-blue-50 rounded-lg">
             <span className="text-2xl">📄</span>
@@ -1563,27 +1748,44 @@ export default function SchoolsPage() {
               href={pdfUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+              className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm"
             >
               ダウンロード
             </a>
           </div>
         )}
 
+        {/* 🔥 コンテンツ本文（明示表示追加） */}
+        {/* <div className="mb-4">
+          <h3 className="text-blue-700 font-semibold mb-2">コンテンツ内容</h3>
+
+          <div className="border border-blue-200 p-4 rounded-lg bg-blue-50 text-blue-800 whitespace-pre-wrap">
+            {responseData.data.content}
+          </div>
+        </div> */}
+
+        {/* Markdownレンダリング（ビジュアル表示） */}
         <div className="border border-blue-200 p-4 rounded-lg bg-blue-50">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              img: ({ node, ...props }) => (
+              img: ({ ...props }) => (
                 <img
                   {...props}
-                  style={{ maxWidth: "100%", margin: "8px 0", borderRadius: "6px", border: "1px solid #cbd5e1" }}
-                  alt=""
+                  style={{
+                    maxWidth: "100%",
+                    margin: "8px 0",
+                    borderRadius: "6px",
+                    border: "1px solid #cbd5e1",
+                  }}
                 />
               ),
-              a: ({ node, ...props }) => {
+              a: ({ ...props }) => {
                 if (props.href?.endsWith(".pdf")) {
-                  const name = React.Children.toArray(props.children)[0]?.toString() || "PDFファイル";
+                  const name =
+                    React.Children.toArray(props.children)[0]?.toString() ||
+                    "PDFファイル";
+
                   return (
                     <div className="flex items-center gap-2 p-3 mb-3 border border-blue-300 bg-blue-100 rounded-lg">
                       <span className="text-2xl">📄</span>
@@ -1592,21 +1794,32 @@ export default function SchoolsPage() {
                         href={props.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+                        className="px-2 py-1 bg-blue-600 text-white rounded-lg text-sm"
                       >
                         ダウンロード
                       </a>
                     </div>
                   );
                 }
-                return <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" />;
+
+                return (
+                  <a
+                    {...props}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  />
+                );
               },
             }}
           >
             {responseData.data.content ?? ""}
           </ReactMarkdown>
         </div>
+
       </div>
     </div>
   );
+
+
 }

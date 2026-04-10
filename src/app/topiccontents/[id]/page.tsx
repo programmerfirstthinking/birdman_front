@@ -266,287 +266,529 @@ export default function Page() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 font-sans flex justify-center">
-      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg p-6">
+  // return (
+  //   <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 font-sans flex justify-center">
+  //     <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg p-6">
 
-        {/* トピック */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-blue-800 mb-4">トピック情報</h2>
+  //       {/* トピック */}
+  //       <div className="mb-6">
+  //         <h2 className="text-2xl font-bold text-blue-800 mb-4">トピック情報</h2>
 
-          <div className="mb-3">
-            <h4 className="text-blue-700 font-semibold">題名</h4>
-            {isEditing ? (
-              <input
-                type="text"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-              />
-            ) : (
-              <div className="text-blue-800 font-medium">{results?.TopicName}</div>
-            )}
-          </div>
+  //         <div className="mb-3">
+  //           <h4 className="text-blue-700 font-semibold">題名</h4>
+  //           {isEditing ? (
+  //             <input
+  //               type="text"
+  //               value={editTitle}
+  //               onChange={(e) => setEditTitle(e.target.value)}
+  //               className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+  //             />
+  //           ) : (
+  //             <div className="text-blue-800 font-medium">{results?.TopicName}</div>
+  //           )}
+  //         </div>
 
-          <div className="mb-3">
-            <h4 className="text-blue-700 font-semibold">内容</h4>
-            {isEditing ? (
-              <textarea
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                className="w-full h-32 p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none resize-none"
-              />
-            ) : (
-              // <div className="text-blue-800">{results?.Content}</div>
-              <div className="text-blue-800 whitespace-pre-line">{results?.Content}</div>
-            )}
-          </div>
+  //         <div className="mb-3">
+  //           <h4 className="text-blue-700 font-semibold">内容</h4>
+  //           {isEditing ? (
+  //             <textarea
+  //               value={editContent}
+  //               onChange={(e) => setEditContent(e.target.value)}
+  //               className="w-full h-32 p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none resize-none"
+  //             />
+  //           ) : (
+  //             // <div className="text-blue-800">{results?.Content}</div>
+  //             <div className="text-blue-800 whitespace-pre-line">{results?.Content}</div>
+  //           )}
+  //         </div>
 
-          <div className="mb-3">
-            <h4 className="text-blue-700 font-semibold">投稿者</h4>
-            <div className="text-blue-800 font-medium">
-              {topicOwner?.name ?? getUserName(results?.UserID ?? 0)}
-            </div>
-            <div className="text-blue-700 text-sm mt-1">
-              学校: {topicOwner?.school_name ?? getUserSchoolName(results?.UserID ?? 0)}
-            </div>
-            {/* <div className="text-blue-700 text-sm">
-              school_id: {topicOwner?.school_id ?? getUserSchoolId(results?.UserID ?? 0) ?? "不明"}
-            </div> */}
-          </div>
+  //         <div className="mb-3">
+  //           <h4 className="text-blue-700 font-semibold">投稿者</h4>
+  //           <div className="text-blue-800 font-medium">
+  //             {topicOwner?.name ?? getUserName(results?.UserID ?? 0)}
+  //           </div>
+  //           <div className="text-blue-700 text-sm mt-1">
+  //             学校: {topicOwner?.school_name ?? getUserSchoolName(results?.UserID ?? 0)}
+  //           </div>
+  //           {/* <div className="text-blue-700 text-sm">
+  //             school_id: {topicOwner?.school_id ?? getUserSchoolId(results?.UserID ?? 0) ?? "不明"}
+  //           </div> */}
+  //         </div>
 
-          {/* 編集ボタン */}
-          {/* {currentUser && results?.UserID === currentUser.id && !isEditing && (
-            <div>
-                <button
-                  onClick={() => {
-                    setIsEditing(true);
-                    setEditTitle(results?.TopicName || "");
-                    setEditContent(results?.Content || "");
-                  }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-                >
-                  編集
-                </button>
-                <button>削除</button>
+  //         {/* 編集ボタン */}
+  //         {/* {currentUser && results?.UserID === currentUser.id && !isEditing && (
+  //           <div>
+  //               <button
+  //                 onClick={() => {
+  //                   setIsEditing(true);
+  //                   setEditTitle(results?.TopicName || "");
+  //                   setEditContent(results?.Content || "");
+  //                 }}
+  //                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+  //               >
+  //                 編集
+  //               </button>
+  //               <button>削除</button>
 
-            </div>
+  //           </div>
             
             
-          )} */}
+  //         )} */}
 
-          {/* 編集ボタンと削除ボタン */}
-          {currentUser && results?.UserID === currentUser.id && !isEditing && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setIsEditing(true);
-                  setEditTitle(results?.TopicName || "");
-                  setEditContent(results?.Content || "");
-                }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-              >
-                編集
-              </button>
+  //         {/* 編集ボタンと削除ボタン */}
+  //         {currentUser && results?.UserID === currentUser.id && !isEditing && (
+  //           <div className="flex gap-2">
+  //             <button
+  //               onClick={() => {
+  //                 setIsEditing(true);
+  //                 setEditTitle(results?.TopicName || "");
+  //                 setEditContent(results?.Content || "");
+  //               }}
+  //               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+  //             >
+  //               編集
+  //             </button>
 
-              {/* <button
-                onClick={async () => {
-                  const auth = getAuth();
-                  const user = auth.currentUser;
-                  if (!user) return;
+  //             {/* <button
+  //               onClick={async () => {
+  //                 const auth = getAuth();
+  //                 const user = auth.currentUser;
+  //                 if (!user) return;
 
-                  const idToken = await user.getIdToken();
+  //                 const idToken = await user.getIdToken();
 
-                  if (!confirm("本当にこのグループを削除しますか？")) return;
+  //                 if (!confirm("本当にこのグループを削除しますか？")) return;
 
-                  try {
-                    // DELETE /groups/:id へリクエスト
-                    const res = await fetch(`${API_BASE_URL}/groups/${id}`, {
-                      method: "DELETE",
-                      headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${idToken}`, // 認証トークン
-                      },
-                    });
+  //                 try {
+  //                   // DELETE /groups/:id へリクエスト
+  //                   const res = await fetch(`${API_BASE_URL}/groups/${id}`, {
+  //                     method: "DELETE",
+  //                     headers: {
+  //                       "Content-Type": "application/json",
+  //                       Authorization: `Bearer ${idToken}`, // 認証トークン
+  //                     },
+  //                   });
 
-                    if (!res.ok) {
-                      const errData = await res.json();
-                      console.error("削除エラー:", errData);
-                      alert(errData.error || "グループ削除に失敗しました");
-                      return;
-                    }
+  //                   if (!res.ok) {
+  //                     const errData = await res.json();
+  //                     console.error("削除エラー:", errData);
+  //                     alert(errData.error || "グループ削除に失敗しました");
+  //                     return;
+  //                   }
 
-                    // 削除成功
-                    alert("グループを削除しました");
-                    router.push("/topic")
+  //                   // 削除成功
+  //                   alert("グループを削除しました");
+  //                   router.push("/topic")
                     
-                    // グループ一覧ページなどへ遷移
-                    // window.location.href = "/groups"; // 必要に応じて変更
-                  } catch (err) {
-                    console.error("グループ削除エラー:", err);
-                    alert("グループ削除に失敗しました");
-                  }
-                }}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
-              >
-                削除
-              </button> */}
-              <button
-                onClick={async () => {
-                  // 1. ID が存在するか確認
-                  if (!id) {
-                    alert("削除対象のトピックIDが取得できていません");
-                    return;
-                  }
+  //                   // グループ一覧ページなどへ遷移
+  //                   // window.location.href = "/groups"; // 必要に応じて変更
+  //                 } catch (err) {
+  //                   console.error("グループ削除エラー:", err);
+  //                   alert("グループ削除に失敗しました");
+  //                 }
+  //               }}
+  //               className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+  //             >
+  //               削除
+  //             </button> */}
+  //             <button
+  //               onClick={async () => {
+  //                 // 1. ID が存在するか確認
+  //                 if (!id) {
+  //                   alert("削除対象のトピックIDが取得できていません");
+  //                   return;
+  //                 }
 
-                  // 2. 確認ダイアログ
-                  if (!confirm("本当にこのトピックを削除しますか？")) return;
+  //                 // 2. 確認ダイアログ
+  //                 if (!confirm("本当にこのトピックを削除しますか？")) return;
 
-                  try {
-                    // 3. Firebase 現在ユーザーとトークン取得
-                    const auth = getAuth();
-                    const user = auth.currentUser;
-                    if (!user) {
-                      alert("ログインしていません");
-                      return;
-                    }
+  //                 try {
+  //                   // 3. Firebase 現在ユーザーとトークン取得
+  //                   const auth = getAuth();
+  //                   const user = auth.currentUser;
+  //                   if (!user) {
+  //                     alert("ログインしていません");
+  //                     return;
+  //                   }
 
-                    const idToken = await user.getIdToken();
+  //                   const idToken = await user.getIdToken();
 
-                    // 4. バックエンドの DELETE エンドポイント
-                    const deleteUrl = `${API_BASE_URL.replace(/\/$/, "")}/deleteTopic/${id}`;
-                    console.log("DELETE URL:", deleteUrl);
+  //                   // 4. バックエンドの DELETE エンドポイント
+  //                   const deleteUrl = `${API_BASE_URL.replace(/\/$/, "")}/deleteTopic/${id}`;
+  //                   console.log("DELETE URL:", deleteUrl);
 
-                    // 5. DELETE リクエスト送信
-                    const res = await fetch(deleteUrl, {
-                      method: "DELETE",
-                      headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${idToken}`, // Firebase トークン
-                      },
-                    });
+  //                   // 5. DELETE リクエスト送信
+  //                   const res = await fetch(deleteUrl, {
+  //                     method: "DELETE",
+  //                     headers: {
+  //                       "Content-Type": "application/json",
+  //                       Authorization: `Bearer ${idToken}`, // Firebase トークン
+  //                     },
+  //                   });
 
-                    // 6. レスポンスチェック
-                    if (!res.ok) {
-                      const errData = await res.json();
-                      console.error("削除エラー:", errData);
-                      alert(errData.error || "トピック削除に失敗しました");
-                      return;
-                    }
+  //                   // 6. レスポンスチェック
+  //                   if (!res.ok) {
+  //                     const errData = await res.json();
+  //                     console.error("削除エラー:", errData);
+  //                     alert(errData.error || "トピック削除に失敗しました");
+  //                     return;
+  //                   }
 
-                    // 7. 削除成功
-                    alert("トピックを削除しました");
-                    router.push("/topic"); // トピック一覧ページへ遷移
+  //                   // 7. 削除成功
+  //                   alert("トピックを削除しました");
+  //                   router.push("/topic"); // トピック一覧ページへ遷移
 
-                  } catch (err) {
-                    console.error("トピック削除エラー:", err);
-                    alert("トピック削除に失敗しました");
-                  }
-                }}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
-              >
-                削除
-              </button>
+  //                 } catch (err) {
+  //                   console.error("トピック削除エラー:", err);
+  //                   alert("トピック削除に失敗しました");
+  //                 }
+  //               }}
+  //               className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+  //             >
+  //               削除
+  //             </button>
+  //           </div>
+  //         )}
+
+  //         {/* 保存ボタン（編集時のみ） */}
+  //         {isEditing && (
+  //           <button
+  //             onClick={async () => {
+  //               const auth = getAuth();
+  //               const user = auth.currentUser;
+  //               if (!user) return;
+
+  //               const idToken = await user.getIdToken();
+
+  //               // await fetch("http://localhost:8080/edit_topic", {
+  //               await fetch(`${API_BASE_URL}/edit_topic`, {
+  //                 method: "PUT",
+  //                 headers: { "Content-Type": "application/json" },
+  //                 body: JSON.stringify({
+  //                   topicId: Number(id),
+  //                   title: editTitle,
+  //                   content: editContent,
+  //                   token: idToken,
+  //                 }),
+  //               });
+
+  //               setIsEditing(false);
+  //               GetTopicdata(id);
+  //             }}
+  //             className="ml-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+  //           >
+  //             保存
+  //           </button>
+  //         )}
+  //       </div>
+
+  //       {/* コメント一覧 */}
+  //       <div className="mb-6">
+  //         <h2 className="text-xl font-bold text-blue-800 mb-4">コメント一覧</h2>
+  //         {comments?.map((comment) => (
+  //           <div
+  //             key={comment.ID}
+  //             className="mb-3 p-3 border border-blue-300 rounded-lg bg-blue-50"
+  //           >
+  //             {editingCommentId === comment.ID ? (
+  //               <>
+  //                 <textarea
+  //                   value={editCommentContent}
+  //                   onChange={(e) => setEditCommentContent(e.target.value)}
+  //                   className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2 resize-none"
+  //                 />
+  //                 <div className="flex gap-2">
+  //                   <button
+  //                     onClick={async () => {
+  //                       const auth = getAuth();
+  //                       const user = auth.currentUser;
+  //                       if (!user) return;
+
+  //                       const idToken = await user.getIdToken();
+
+  //                       // await fetch("http://localhost:8080/edit_topic_comment", {
+  //                       await fetch(`${API_BASE_URL}/edit_topic_comment`, {
+  //                         method: "PUT",
+  //                         headers: { "Content-Type": "application/json" },
+  //                         body: JSON.stringify({
+  //                           commentId: comment.ID,
+  //                           content: editCommentContent,
+  //                           token: idToken,
+  //                         }),
+  //                       });
+
+  //                       setEditingCommentId(null);
+  //                       GetTopicdata(id);
+  //                     }}
+  //                     className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+  //                   >
+  //                     保存
+  //                   </button>
+  //                   <button
+  //                     onClick={() => setEditingCommentId(null)}
+  //                     className="px-3 py-1 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition"
+  //                   >
+  //                     キャンセル
+  //                   </button>
+  //                 </div>
+  //               </>
+  //             ) : (
+  //               <>
+  //                 {/* <p className="text-blue-800 mb-1">{comment.Content}</p> */}
+  //                 <p className="text-blue-800 mb-1 whitespace-pre-line">{comment.Content}</p>
+  //                 <p className="text-blue-700 text-sm mb-1">
+  //                   ユーザー: {getUserName(comment.UserID)}
+  //                 </p>
+  //                 <p className="text-blue-700 text-sm mb-1">
+  //                   {/* 学校: {getUserSchoolName(comment.UserID)}  */}
+  //                   学校: {getUserSchoolName(comment.UserID)} 
+  //                   {/* (school_id: {getUserSchoolId(comment.UserID) ?? "不明"}) */}
+  //                 </p>
+  //                 {/* <p className="text-blue-700 text-sm mb-2">作成日時: {comment.CreatedAt}</p> */}
+  //                 <p className="text-blue-700 text-sm mb-2">
+  //                   作成日時: {new Date(comment.CreatedAt).toLocaleString()}
+  //                 </p>
+  //                 {currentUser && comment.UserID === currentUser.id && (
+  //                   <div className="flex gap-2">
+  //                     <button
+  //                       onClick={() => {
+  //                         setEditingCommentId(comment.ID);
+  //                         setEditCommentContent(comment.Content);
+  //                       }}
+  //                       className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition"
+  //                     >
+  //                       編集
+  //                     </button>
+  //                     <button
+  //                       onClick={() => deleteComment(comment.ID, comment.UserID)}
+  //                       className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition"
+  //                     >
+  //                       削除
+  //                     </button>
+  //                   </div>
+  //                 )}
+  //               </>
+  //             )}
+  //           </div>
+  //         ))}
+  //       </div>
+
+  //       {/* コメント投稿フォーム */}
+  //       <div>
+  //         <h3 className="text-lg font-bold text-blue-800 mb-2">
+  //           コメントを投稿
+  //         </h3>
+  //         <form
+  //           onSubmit={async (e) => {
+  //             e.preventDefault();
+  //             await sendinfo();
+  //           }}
+  //           className="flex flex-col gap-2"
+  //         >
+  //           <input
+  //             type="text"
+  //             value={topic_comment}
+  //             onChange={(e) => setTopicComment(e.target.value)}
+  //             placeholder="コメント内容"
+  //             className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+  //           />
+  //           <button
+  //             type="submit"
+  //             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition w-32"
+  //           >
+  //             投稿
+  //           </button>
+  //         </form>
+  //       </div>
+
+  //     </div>
+  //   </div>
+  // );
+
+
+return (
+  <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 font-sans flex justify-center">
+    <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg p-6">
+
+      {/* トピック */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-blue-800 mb-4">トピック情報</h2>
+
+        <div className="mb-3">
+          <h4 className="text-blue-700 font-semibold">題名</h4>
+          {isEditing ? (
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="w-full p-2 border border-blue-300 rounded-lg"
+            />
+          ) : (
+            <div className="text-blue-800 font-medium">{results?.TopicName}</div>
+          )}
+        </div>
+
+        <div className="mb-3">
+          <h4 className="text-blue-700 font-semibold">内容</h4>
+          {isEditing ? (
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full h-32 p-2 border border-blue-300 rounded-lg resize-none"
+            />
+          ) : (
+            <div className="text-blue-800 whitespace-pre-line">
+              {results?.Content}
             </div>
           )}
+        </div>
 
-          {/* 保存ボタン（編集時のみ） */}
-          {isEditing && (
+        <div className="mb-3 text-sm text-blue-600">
+          投稿者: {topicOwner?.name ?? getUserName(results?.UserID ?? 0)}
+          <br />
+          学校: {topicOwner?.school_name ?? getUserSchoolName(results?.UserID ?? 0)}
+        </div>
+
+        {currentUser && results?.UserID === currentUser.id && !isEditing && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setIsEditing(true);
+                setEditTitle(results?.TopicName || "");
+                setEditContent(results?.Content || "");
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+            >
+              編集
+            </button>
+
             <button
               onClick={async () => {
+                if (!id) return;
+                if (!confirm("本当にこのトピックを削除しますか？")) return;
+
                 const auth = getAuth();
                 const user = auth.currentUser;
                 if (!user) return;
 
                 const idToken = await user.getIdToken();
 
-                // await fetch("http://localhost:8080/edit_topic", {
-                await fetch(`${API_BASE_URL}/edit_topic`, {
-                  method: "PUT",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    topicId: Number(id),
-                    title: editTitle,
-                    content: editContent,
-                    token: idToken,
-                  }),
+                const res = await fetch(`${API_BASE_URL}/deleteTopic/${id}`, {
+                  method: "DELETE",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${idToken}`,
+                  },
                 });
 
-                setIsEditing(false);
-                GetTopicdata(id);
+                if (!res.ok) {
+                  alert("削除失敗");
+                  return;
+                }
+
+                alert("削除成功");
+                router.push("/topic");
               }}
-              className="ml-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              className="px-4 py-2 bg-red-500 text-white rounded-lg"
             >
-              保存
+              削除
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* コメント一覧 */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-blue-800 mb-4">コメント一覧</h2>
-          {comments?.map((comment) => (
-            <div
-              key={comment.ID}
-              className="mb-3 p-3 border border-blue-300 rounded-lg bg-blue-50"
-            >
-              {editingCommentId === comment.ID ? (
-                <>
-                  <textarea
-                    value={editCommentContent}
-                    onChange={(e) => setEditCommentContent(e.target.value)}
-                    className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2 resize-none"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={async () => {
-                        const auth = getAuth();
-                        const user = auth.currentUser;
-                        if (!user) return;
+        {isEditing && (
+          <button
+            onClick={async () => {
+              const auth = getAuth();
+              const user = auth.currentUser;
+              if (!user) return;
 
-                        const idToken = await user.getIdToken();
+              const idToken = await user.getIdToken();
 
-                        // await fetch("http://localhost:8080/edit_topic_comment", {
-                        await fetch(`${API_BASE_URL}/edit_topic_comment`, {
-                          method: "PUT",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            commentId: comment.ID,
-                            content: editCommentContent,
-                            token: idToken,
-                          }),
-                        });
+              await fetch(`${API_BASE_URL}/edit_topic`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  topicId: Number(id),
+                  title: editTitle,
+                  content: editContent,
+                  token: idToken,
+                }),
+              });
 
-                        setEditingCommentId(null);
-                        GetTopicdata(id);
-                      }}
-                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-                    >
-                      保存
-                    </button>
-                    <button
-                      onClick={() => setEditingCommentId(null)}
-                      className="px-3 py-1 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition"
-                    >
-                      キャンセル
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* <p className="text-blue-800 mb-1">{comment.Content}</p> */}
-                  <p className="text-blue-800 mb-1 whitespace-pre-line">{comment.Content}</p>
-                  <p className="text-blue-700 text-sm mb-1">
-                    ユーザー: {getUserName(comment.UserID)}
-                  </p>
-                  <p className="text-blue-700 text-sm mb-1">
-                    学校: {getUserSchoolName(comment.UserID)} 
-                    {/* (school_id: {getUserSchoolId(comment.UserID) ?? "不明"}) */}
-                  </p>
-                  {/* <p className="text-blue-700 text-sm mb-2">作成日時: {comment.CreatedAt}</p> */}
-                  <p className="text-blue-700 text-sm mb-2">
-                    作成日時: {new Date(comment.CreatedAt).toLocaleString()}
-                  </p>
+              setIsEditing(false);
+              GetTopicdata(id);
+            }}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg"
+          >
+            保存
+          </button>
+        )}
+      </div>
+
+      {/* コメント一覧 */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-blue-800 mb-4">コメント一覧</h2>
+
+        {comments?.map((comment) => (
+          <div
+            key={comment.ID}
+            className="mb-3 p-3 border border-blue-300 rounded-lg bg-blue-50"
+          >
+            {editingCommentId === comment.ID ? (
+              <>
+                <textarea
+                  value={editCommentContent}
+                  onChange={(e) => setEditCommentContent(e.target.value)}
+                  className="w-full p-2 border rounded-lg mb-2"
+                />
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      const auth = getAuth();
+                      const user = auth.currentUser;
+                      if (!user) return;
+
+                      const idToken = await user.getIdToken();
+
+                      await fetch(`${API_BASE_URL}/edit_topic_comment`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          commentId: comment.ID,
+                          content: editCommentContent,
+                          token: idToken,
+                        }),
+                      });
+
+                      setEditingCommentId(null);
+                      GetTopicdata(id);
+                    }}
+                    className="px-3 py-1 bg-blue-600 text-white rounded-lg"
+                  >
+                    保存
+                  </button>
+
+                  <button
+                    onClick={() => setEditingCommentId(null)}
+                    className="px-3 py-1 bg-gray-300 rounded-lg"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* 本文 */}
+                <p className="text-blue-800 mb-2 whitespace-pre-line">
+                  {comment.Content}
+                </p>
+
+                {/* 下段 */}
+                <div className="flex justify-between items-end">
+
+                  {/* 左：操作 */}
                   {currentUser && comment.UserID === currentUser.id && (
                     <div className="flex gap-2">
                       <button
@@ -554,53 +796,59 @@ export default function Page() {
                           setEditingCommentId(comment.ID);
                           setEditCommentContent(comment.Content);
                         }}
-                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition"
+                        className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm"
                       >
                         編集
                       </button>
+
                       <button
                         onClick={() => deleteComment(comment.ID, comment.UserID)}
-                        className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition"
+                        className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm"
                       >
                         削除
                       </button>
                     </div>
                   )}
-                </>
-              )}
-            </div>
-          ))}
-        </div>
 
-        {/* コメント投稿フォーム */}
-        <div>
-          <h3 className="text-lg font-bold text-blue-800 mb-2">
-            コメントを投稿
-          </h3>
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              await sendinfo();
-            }}
-            className="flex flex-col gap-2"
-          >
-            <input
-              type="text"
-              value={topic_comment}
-              onChange={(e) => setTopicComment(e.target.value)}
-              placeholder="コメント内容"
-              className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition w-32"
-            >
-              投稿
-            </button>
-          </form>
-        </div>
+                  {/* 右：メタ情報 */}
+                  <div className="text-right text-xs text-blue-600">
+                    <div>ユーザー: {getUserName(comment.UserID)}</div>
+                    <div>学校: {getUserSchoolName(comment.UserID)}</div>
+                    <div>
+                      {new Date(comment.CreatedAt).toLocaleString()}
+                    </div>
+                  </div>
 
+                </div>
+              </>
+            )}
+          </div>
+        ))}
       </div>
+
+      {/* 投稿フォーム */}
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          await sendinfo();
+        }}
+        className="flex flex-col gap-2"
+      >
+        <input
+          type="text"
+          value={topic_comment}
+          onChange={(e) => setTopicComment(e.target.value)}
+          placeholder="コメント内容"
+          className="p-2 border rounded-lg"
+        />
+
+        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg w-32">
+          投稿
+        </button>
+      </form>
+
     </div>
-  );
+  </div>
+);
+
 }

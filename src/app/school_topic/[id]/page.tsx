@@ -708,6 +708,7 @@ type GroupContent = {
 type GroupItem = {
   id: number;
   userId: number;
+  ownerName: string;
   schoolId: number;
   createdAt: string;
   updatedAt: string;
@@ -718,7 +719,6 @@ type GroupItem = {
 type EditGroupRequest = {
   groupId: number;
   groupName: string;
-  idToken: string;
 };
 
 //////////////////////////////////////////////////////
@@ -755,6 +755,7 @@ const fetchGroupsFetcher = async (
   const groupedData: GroupItem[] = data.all_groups.map((g: any) => ({
     id: g.group.ID,
     userId: g.group.UserID,
+    ownerName: g.ownerName || "",
     schoolId: g.group.SchoolID,
     createdAt: g.group.CreatedAt,
     updatedAt: g.group.UpdatedAt,
@@ -1018,8 +1019,9 @@ export default function CreateGroup() {
                   </h4>
                 )}
 
-                <p className="text-blue-600 mb-1">ユーザーID: {g.userId}</p>
-                <p className="text-blue-600 mb-1">学校ID: {g.schoolId}</p>
+                {/* <p className="text-blue-600 mb-1">ユーザーID: {g.userId}</p>
+                <p className="text-blue-600 mb-1">学校ID: {g.schoolId}</p> */}
+                <p className="text-blue-600 mb-1">作成者: {g.ownerName || `ID:${g.userId}`}</p>
                 <p className="text-blue-600 mb-2">
                   作成日時: {new Date(g.createdAt).toLocaleString()}
                 </p>
