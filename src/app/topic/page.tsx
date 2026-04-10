@@ -651,6 +651,7 @@ const fetcher = async (url: string) => {
 // ----------------------
 export default function Main() {
   const router = useRouter();
+  const [currentPage, setCurrentPage] = useState(1);
 
   // ✅ 学校一覧（キャッシュされる）
   const { data: schoolData, isLoading: loadingSchools } = useSWR(
@@ -661,10 +662,11 @@ export default function Main() {
 
   // ✅ トピック一覧（キャッシュされる）
   const { data: topicData, isLoading: loadingTopics, mutate } = useSWR(
-    `${API_BASE_URL}/topics`,
+    `${API_BASE_URL}/topics?page=${currentPage}`,
     fetcher
   );
   const results: Topic[] = topicData?.topics ?? [];
+  const totalPages = Math.max(topicData?.totalPages ?? 1, 1);
 
   // ----------------------
   // UI State
@@ -679,14 +681,9 @@ export default function Main() {
   // ----------------------
   // ページネーション
   // ----------------------
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
-  const totalPages = Math.max(Math.ceil(results.length / itemsPerPage), 1);
+  
 
-  const displayedTopics = results.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const displayedTopics = results;
 
   // ----------------------
   // routing
