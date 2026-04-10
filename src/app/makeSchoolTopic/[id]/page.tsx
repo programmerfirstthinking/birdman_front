@@ -1196,8 +1196,8 @@ const MarkdownImageUploader: React.FC = () => {
         markdown,
       ].join("\n");
 
+      const idToken = await user.getIdToken();
       const payload = {
-        uid: user.uid,
         groupId,
         contentName,
         content: markdownContent,
@@ -1206,7 +1206,10 @@ const MarkdownImageUploader: React.FC = () => {
 
       const response = await fetch(`${API_BASE_URL}/make_grouptopic`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
         body: JSON.stringify(payload),
       });
 

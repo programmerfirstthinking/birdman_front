@@ -790,13 +790,17 @@ export default function Main() {
         body: JSON.stringify({
           name: trimmedTopicName,
           content: trimmedTopicContent,
-          token: idToken,
         }),
       });
 
-      if (!res.ok) throw new Error("トピック投稿失敗");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(
+          errData.error || errData.message || "トピック投稿失敗"
+        );
+      }
 
-      await mutate();
+      await mutate(undefined, { revalidate: true });
 
       setTopicName("");
       setTopicContent("");

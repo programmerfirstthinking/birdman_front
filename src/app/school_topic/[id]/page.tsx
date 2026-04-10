@@ -690,15 +690,12 @@ const provider = new GoogleAuthProvider();
 
 type MakeGroupRequest = {
   groupName: string;
-  idToken: string;
-  schoolId: number;
 };
 
 type AddContentRequest = {
   groupId: number;
   contentName: string;
   content: string;
-  idToken: string;
 };
 
 type GroupContent = {
@@ -736,10 +733,12 @@ const fetchGroupsFetcher = async (
 
   const res = await fetch(`${API_BASE_URL}/getgroups`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`,
+    },
     body: JSON.stringify({
       groupID: schoolId,
-      idToken: idToken,
     }),
   });
 
@@ -840,11 +839,14 @@ export default function CreateGroup() {
     setLoading(true);
     try {
       const idToken = await currentUser.getIdToken();
-      const payload: MakeGroupRequest = { groupName, idToken, schoolId };
+      const payload: MakeGroupRequest = { groupName };
 
       const res = await fetch(`${API_BASE_URL}/makegroup`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
         body: JSON.stringify(payload),
       });
 
@@ -876,13 +878,13 @@ export default function CreateGroup() {
       const payload: EditGroupRequest = {
         groupId: groupId,
         groupName: editingGroupName,
-        idToken: idToken,
       };
 
       const res = await fetch(`${API_BASE_URL}/editgroup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify(payload),
       });
