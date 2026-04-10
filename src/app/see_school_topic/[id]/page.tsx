@@ -1660,85 +1660,6 @@ export default function SchoolsPage() {
           )}
         </div>
 
-        {/* PDF（編集時） */}
-        {isEditing && pdfUrl && (
-          <div className="flex items-center justify-between gap-2 p-4 mb-4 border border-blue-300 bg-blue-50 rounded-lg">
-            <span className="text-2xl">📄</span>
-            <span className="flex-1 text-blue-700">PDFファイル</span>
-            <div className="flex gap-2">
-              <a
-                href={pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm"
-              >
-                ダウンロード
-              </a>
-              <button
-                onClick={handlePdfDelete}
-                className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm"
-              >
-                削除
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 編集UI */}
-        {isEditing && (
-          <>
-            <textarea
-              value={markdown}
-              onChange={(e) => setMarkdown(e.target.value)}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              className="w-full h-48 mb-4 p-3 border border-blue-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Markdown本文を入力（画像ドラッグ可）"
-            />
-
-            <div className="flex gap-4 mb-6">
-              <button
-                onClick={async () => {
-                  if (!contentId || !currentUser) return;
-
-                  const idToken = await currentUser.getIdToken();
-
-                  const res = await fetch(`${API_BASE_URL}/editSchoolContent`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      id: contentId,
-                      group_contents_name: contentName,
-                      content: markdown,
-                      pdf_url: pdfUrl,
-                      idToken,
-                    }),
-                  });
-
-                  if (!res.ok) {
-                    alert("更新失敗");
-                    return;
-                  }
-
-                  const data: ApiResponse = await res.json();
-                  setResponseData(data);
-                  setIsEditing(false);
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-              >
-                更新
-              </button>
-
-              <button
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg"
-              >
-                キャンセル
-              </button>
-            </div>
-          </>
-        )}
-
         {/* PDF（表示モード） */}
         {!isEditing && pdfUrl && (
           <div className="flex items-center justify-between gap-2 p-4 mb-4 border border-blue-300 bg-blue-50 rounded-lg">
@@ -1755,71 +1676,178 @@ export default function SchoolsPage() {
           </div>
         )}
 
-        {/* 🔥 コンテンツ本文（明示表示追加） */}
-        {/* <div className="mb-4">
-          <h3 className="text-blue-700 font-semibold mb-2">コンテンツ内容</h3>
+        {/* 編集エリア + プレビュー */}
+        {isEditing && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
-          <div className="border border-blue-200 p-4 rounded-lg bg-blue-50 text-blue-800 whitespace-pre-wrap">
-            {responseData.data.content}
-          </div>
-        </div> */}
+            {/* 編集 */}
+            <div>
+              <textarea
+                value={markdown}
+                onChange={(e) => setMarkdown(e.target.value)}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                className="w-full h-96 p-3 border border-blue-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Markdown本文を入力（画像ドラッグ可）"
+              />
+            </div>
 
-        {/* Markdownレンダリング（ビジュアル表示） */}
-        <div className="border border-blue-200 p-4 rounded-lg bg-blue-50">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              img: ({ ...props }) => (
-                <img
-                  {...props}
-                  style={{
-                    maxWidth: "100%",
-                    margin: "8px 0",
-                    borderRadius: "6px",
-                    border: "1px solid #cbd5e1",
-                  }}
-                />
-              ),
-              a: ({ ...props }) => {
-                if (props.href?.endsWith(".pdf")) {
-                  const name =
-                    React.Children.toArray(props.children)[0]?.toString() ||
-                    "PDFファイル";
+            {/* プレビュー */}
+            <div className="h-96 overflow-auto border border-blue-200 p-3 rounded-lg bg-blue-50">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  img: ({ ...props }) => (
+                    <img
+                      {...props}
+                      style={{
+                        maxWidth: "100%",
+                        margin: "8px 0",
+                        borderRadius: "6px",
+                        border: "1px solid #cbd5e1",
+                      }}
+                    />
+                  ),
+                  a: ({ ...props }) => {
+                    if (props.href?.endsWith(".pdf")) {
+                      const name =
+                        React.Children.toArray(props.children)[0]?.toString() ||
+                        "PDFファイル";
 
-                  return (
-                    <div className="flex items-center gap-2 p-3 mb-3 border border-blue-300 bg-blue-100 rounded-lg">
-                      <span className="text-2xl">📄</span>
-                      <span className="flex-1 text-blue-700">{name}</span>
+                      return (
+                        <div className="flex items-center gap-2 p-3 mb-3 border border-blue-300 bg-blue-100 rounded-lg">
+                          <span className="text-2xl">📄</span>
+                          <span className="flex-1 text-blue-700">{name}</span>
+                          <a
+                            href={props.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 bg-blue-600 text-white rounded-lg text-sm"
+                          >
+                            ダウンロード
+                          </a>
+                        </div>
+                      );
+                    }
+
+                    return (
                       <a
-                        href={props.href}
+                        {...props}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-2 py-1 bg-blue-600 text-white rounded-lg text-sm"
-                      >
-                        ダウンロード
-                      </a>
-                    </div>
-                  );
+                        className="text-blue-600 hover:underline"
+                      />
+                    );
+                  },
+                }}
+              >
+                {markdown}
+              </ReactMarkdown>
+            </div>
+          </div>
+        )}
+
+        {/* 更新ボタン */}
+        {isEditing && (
+          <div className="flex gap-4 mb-6">
+            <button
+              onClick={async () => {
+                if (!contentId || !currentUser) return;
+
+                const idToken = await currentUser.getIdToken();
+
+                const res = await fetch(`${API_BASE_URL}/editSchoolContent`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    id: contentId,
+                    group_contents_name: contentName,
+                    content: markdown,
+                    pdf_url: pdfUrl,
+                    idToken,
+                  }),
+                });
+
+                if (!res.ok) {
+                  alert("更新失敗");
+                  return;
                 }
 
-                return (
-                  <a
+                const data: ApiResponse = await res.json();
+                setResponseData(data);
+                setIsEditing(false);
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+            >
+              更新
+            </button>
+
+            <button
+              onClick={() => setIsEditing(false)}
+              className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg"
+            >
+              キャンセル
+            </button>
+          </div>
+        )}
+
+        {/* 表示モード本文 */}
+        {!isEditing && (
+          <div className="border border-blue-200 p-4 rounded-lg bg-blue-50">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                img: ({ ...props }) => (
+                  <img
                     {...props}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
+                    style={{
+                      maxWidth: "100%",
+                      margin: "8px 0",
+                      borderRadius: "6px",
+                      border: "1px solid #cbd5e1",
+                    }}
                   />
-                );
-              },
-            }}
-          >
-            {responseData.data.content ?? ""}
-          </ReactMarkdown>
-        </div>
+                ),
+                a: ({ ...props }) => {
+                  if (props.href?.endsWith(".pdf")) {
+                    const name =
+                      React.Children.toArray(props.children)[0]?.toString() ||
+                      "PDFファイル";
+
+                    return (
+                      <div className="flex items-center gap-2 p-3 mb-3 border border-blue-300 bg-blue-100 rounded-lg">
+                        <span className="text-2xl">📄</span>
+                        <span className="flex-1 text-blue-700">{name}</span>
+                        <a
+                          href={props.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2 py-1 bg-blue-600 text-white rounded-lg text-sm"
+                        >
+                          ダウンロード
+                        </a>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <a
+                      {...props}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    />
+                  );
+                },
+              }}
+            >
+              {responseData.data.content ?? ""}
+            </ReactMarkdown>
+          </div>
+        )}
 
       </div>
     </div>
   );
-
 
 }
