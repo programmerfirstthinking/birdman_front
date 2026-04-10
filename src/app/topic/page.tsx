@@ -955,12 +955,12 @@ export default function Main() {
                   <div className="text-xl font-semibold">
                     {school.SchoolName}
                   </div>
-                  <div className="text-sm text-blue-400 mt-1">
+                  {/* <div className="text-sm text-blue-400 mt-1">
                     作成日:
                     {school.CreatedAt
                       ? new Date(school.CreatedAt).toLocaleDateString()
                       : "-"}
-                  </div>
+                  </div> */}
                 </button>
               ))}
             </div>

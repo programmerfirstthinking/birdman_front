@@ -46,12 +46,14 @@ export default function Page() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   type UserInfo = {
-  id: number;
-  name: string;
+    id: number;
+    name: string;
+    school_id: number | null;
+    school_name: string;
   };
 
   const [users, setUsers] = useState<UserInfo[]>([]);
-
+  const [topicOwner, setTopicOwner] = useState<UserInfo | null>(null);
 
   type Topic = {
     ID: number;
@@ -69,14 +71,14 @@ export default function Page() {
   const [topic_comment, setTopicComment] = useState("");
 
   type Comment = {
-  ID: number;
-  UserID: number;
-  TopicID: number;
-  Content: string;
-  CreatedAt: string;
-};
+    ID: number;
+    UserID: number;
+    TopicID: number;
+    Content: string;
+    CreatedAt: string;
+  };
 
-const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
 
   // const app = initializeApp(firebaseConfig);
 
@@ -158,12 +160,11 @@ const [comments, setComments] = useState<Comment[]>([]);
 
         setComments(data.comments);
         setResults(data.topicinfo);
-        setUsers(data.users);
-        setCurrentUser(data.currentuser); // ← 追加
+        setUsers(data.users ?? []);
+        setCurrentUser(data.currentuser);
 
-        setComments(data.comments);
-        setResults(data.topicinfo);
-        setUsers(data.users);
+        const owner = data.users?.find((u: UserInfo) => u.id === data.topicinfo?.UserID) ?? null;
+        setTopicOwner(owner);
 
       } catch (error) {
         console.error("エラー:", error);
@@ -175,6 +176,15 @@ const [comments, setComments] = useState<Comment[]>([]);
       return user ? user.name : "不明なユーザー";
     }
 
+    function getUserSchoolName(userID: number) {
+      const user = users.find((u) => u.id === userID);
+      return user ? user.school_name || "不明な学校" : "不明な学校";
+    }
+
+    function getUserSchoolId(userID: number) {
+      const user = users.find((u) => u.id === userID);
+      return user ? user.school_id : null;
+    }
 
 
   useEffect(() => {
@@ -290,6 +300,19 @@ const [comments, setComments] = useState<Comment[]>([]);
               // <div className="text-blue-800">{results?.Content}</div>
               <div className="text-blue-800 whitespace-pre-line">{results?.Content}</div>
             )}
+          </div>
+
+          <div className="mb-3">
+            <h4 className="text-blue-700 font-semibold">投稿者</h4>
+            <div className="text-blue-800 font-medium">
+              {topicOwner?.name ?? getUserName(results?.UserID ?? 0)}
+            </div>
+            <div className="text-blue-700 text-sm mt-1">
+              学校: {topicOwner?.school_name ?? getUserSchoolName(results?.UserID ?? 0)}
+            </div>
+            {/* <div className="text-blue-700 text-sm">
+              school_id: {topicOwner?.school_id ?? getUserSchoolId(results?.UserID ?? 0) ?? "不明"}
+            </div> */}
           </div>
 
           {/* 編集ボタン */}
@@ -516,7 +539,14 @@ const [comments, setComments] = useState<Comment[]>([]);
                   <p className="text-blue-700 text-sm mb-1">
                     ユーザー: {getUserName(comment.UserID)}
                   </p>
-                  <p className="text-blue-700 text-sm mb-2">作成日時: {comment.CreatedAt}</p>
+                  <p className="text-blue-700 text-sm mb-1">
+                    学校: {getUserSchoolName(comment.UserID)} 
+                    {/* (school_id: {getUserSchoolId(comment.UserID) ?? "不明"}) */}
+                  </p>
+                  {/* <p className="text-blue-700 text-sm mb-2">作成日時: {comment.CreatedAt}</p> */}
+                  <p className="text-blue-700 text-sm mb-2">
+                    作成日時: {new Date(comment.CreatedAt).toLocaleString()}
+                  </p>
                   {currentUser && comment.UserID === currentUser.id && (
                     <div className="flex gap-2">
                       <button
