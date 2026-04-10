@@ -233,6 +233,29 @@ const [comments, setComments] = useState<Comment[]>([]);
 
   }
 
+  async function deleteComment(commentId: number, commentUserId: number) {
+    if (!confirm("このコメントを削除してもよろしいですか？")) {
+      return;
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/deleteTopicComment/${commentId}/${commentUserId}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!response.ok) {
+      console.error(`コメント削除エラー: ${response.status} ${response.statusText}`);
+      alert("コメントの削除に失敗しました");
+      return;
+    }
+
+    if (id) {
+      await GetTopicdata(id);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 font-sans flex justify-center">
       <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg p-6">
@@ -495,15 +518,23 @@ const [comments, setComments] = useState<Comment[]>([]);
                   </p>
                   <p className="text-blue-700 text-sm mb-2">作成日時: {comment.CreatedAt}</p>
                   {currentUser && comment.UserID === currentUser.id && (
-                    <button
-                      onClick={() => {
-                        setEditingCommentId(comment.ID);
-                        setEditCommentContent(comment.Content);
-                      }}
-                      className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition"
-                    >
-                      編集
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingCommentId(comment.ID);
+                          setEditCommentContent(comment.Content);
+                        }}
+                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition"
+                      >
+                        編集
+                      </button>
+                      <button
+                        onClick={() => deleteComment(comment.ID, comment.UserID)}
+                        className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition"
+                      >
+                        削除
+                      </button>
+                    </div>
                   )}
                 </>
               )}
