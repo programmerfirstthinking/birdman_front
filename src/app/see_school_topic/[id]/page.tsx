@@ -2477,10 +2477,8 @@ export default function SchoolsPage() {
       });
 
       if (!res.ok) throw new Error("更新に失敗しました");
-      const data: ApiResponse = await res.json();
-      setResponseData(data);
-      setIsEditing(false);
       alert("コンテンツを更新しました");
+      window.location.reload();
     } catch (err) {
       console.error(err);
       alert("更新に失敗しました");

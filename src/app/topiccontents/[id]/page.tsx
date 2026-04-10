@@ -202,6 +202,11 @@ export default function Page() {
   }, [id]);
 
   async function sendinfo() {
+      const trimmedComment = topic_comment.trim();
+      if (!trimmedComment) {
+        alert("コメント内容を入力してください");
+        return;
+      }
 
       // const params = useParams();
       // const id = params.id;
@@ -224,7 +229,7 @@ export default function Page() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ topicId:id, topic_comment:topic_comment, token: idToken }),
+        body: JSON.stringify({ topicId:id, topic_comment:trimmedComment, token: idToken }),
       });
 
 
@@ -240,6 +245,7 @@ export default function Page() {
       console.log(data.comments);
 
       setComments(data.comments);
+        setTopicComment("");
 
   }
 

@@ -1044,6 +1044,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
 import { API_BASE_URL } from "../../api/api";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // 🔥 Firebase 初期化（重複を避ける）
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -1051,6 +1052,10 @@ const auth = getAuth(app);
 const storage = getStorage(app);
 
 const MarkdownImageUploader: React.FC = () => {
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   type UploadedImage = {
     name: string;
     url: string;
@@ -1227,6 +1232,13 @@ const MarkdownImageUploader: React.FC = () => {
       setMarkdown("");
       setContentName("");
       setPdfUrl("");
+      const schoolIdParam = searchParams.get("schoolId");
+      const schoolId = schoolIdParam ? Number(schoolIdParam) : NaN;
+      if (!Number.isNaN(schoolId)) {
+        router.push(`/school_topic/${schoolId}`);
+      } else {
+        router.push("/schools");
+      }
     } catch (err) {
       console.error(err);
       alert("送信中にエラーが発生しました");

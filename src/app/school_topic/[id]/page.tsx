@@ -828,6 +828,8 @@ export default function CreateGroup() {
   const backendSchoolId = data?.backendSchoolId ?? null;
   const loginUserId = data?.loginUserId ?? null;
   const fetchingGroups = isLoading;
+  const canManageCurrentSchool =
+    backendSchoolId !== null && schoolId !== null && backendSchoolId === schoolId;
 
   //////////////////////////////////////////////////////
   // グループ作成（mutate追加のみ）
@@ -913,7 +915,11 @@ export default function CreateGroup() {
   //////////////////////////////////////////////////////
 
   const handleAddContent = async (groupId: number) => {
-    router.push(`/makeSchoolTopic/${groupId}`);
+    if (!schoolId) {
+      alert("schoolId が取得できませんでした");
+      return;
+    }
+    router.push(`/makeSchoolTopic/${groupId}?schoolId=${schoolId}`);
   };
 
   //////////////////////////////////////////////////////
@@ -961,7 +967,7 @@ export default function CreateGroup() {
           </button>
         )}
 
-        {currentUser && backendSchoolId === schoolId && (
+        {currentUser && canManageCurrentSchool && (
           <form onSubmit={handleSubmitGroup} className="flex gap-4 mb-8">
             <input
               type="text"
@@ -1042,7 +1048,7 @@ export default function CreateGroup() {
            
                   )} */}
 
-                  {loginUserId === g.userId && editingGroupId !== g.id && (
+                  {canManageCurrentSchool && loginUserId === g.userId && editingGroupId !== g.id && (
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setEditingGroupId(g.id); setEditingGroupName(g.groupName); }}
@@ -1088,7 +1094,7 @@ export default function CreateGroup() {
                     </div>
                   )}
 
-                  {backendSchoolId === schoolId && (
+                  {canManageCurrentSchool && (
                     <button
                       onClick={() => handleAddContent(g.id)}
                       className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
