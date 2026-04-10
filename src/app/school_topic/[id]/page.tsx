@@ -1004,7 +1004,7 @@ export default function CreateGroup() {
                 key={g.id}
                 className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition"
               >
-                {editingGroupId === g.id ? (
+                {editingGroupId === g.id && canManageCurrentSchool && loginUserId === g.userId ? (
                   <div className="flex gap-3 mb-4">
                     <input
                       type="text"

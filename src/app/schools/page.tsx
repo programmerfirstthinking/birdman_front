@@ -647,6 +647,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { API_BASE_URL } from "../api/api";
@@ -683,6 +684,7 @@ const fetcher = (url: string) =>
 // ----------------------
 export default function SchoolsPage() {
   const router = useRouter();
+  const [currentPage, setCurrentPage] = useState(1);
 
   // ✅ SWRで取得（自動キャッシュ）
   const { data, isLoading, error } = useSWR(
@@ -691,6 +693,10 @@ export default function SchoolsPage() {
   );
 
   const schools: SchoolWithGroups[] = data?.schools ?? [];
+  const itemsPerPage = 10;
+  const totalPages = Math.max(1, Math.ceil(schools.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedSchools = schools.slice(startIndex, startIndex + itemsPerPage);
 
   // ----------------------
   // routing
@@ -747,34 +753,60 @@ export default function SchoolsPage() {
             学校が登録されていません
           </p>
         ) : (
-          schools.map((school) => (
-            <div
-              key={school.id}
-              onClick={() => handleSchoolClick(school.id)}
-              className="bg-white p-5 rounded-xl shadow-md cursor-pointer hover:shadow-lg transition hover:bg-blue-50"
-            >
-              <h2 className="text-2xl font-semibold text-blue-700 mb-3">
-                {school.school_name}
-              </h2>
+          <>
+            {paginatedSchools.map((school) => (
+              <div
+                key={school.id}
+                onClick={() => handleSchoolClick(school.id)}
+                className="bg-white p-5 rounded-xl shadow-md cursor-pointer hover:shadow-lg transition hover:bg-blue-50"
+              >
+                <h2 className="text-2xl font-semibold text-blue-700 mb-3">
+                  {school.school_name}
+                </h2>
 
-              {(school.groups?.length ?? 0) === 0 ? (
-                <p className="text-blue-400">
-                  この学校にはグループがありません
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {school.groups.map((group) => (
-                    <li
-                      key={group.ID}
-                      className="p-3 bg-blue-50 rounded-md border border-blue-200"
-                    >
-                      {group.Groupname}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))
+                {(school.groups?.length ?? 0) === 0 ? (
+                  <p className="text-blue-400">
+                    この学校にはグループがありません
+                  </p>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {school.groups.map((group) => (
+                      <li
+                        key={group.ID}
+                        className="p-3 bg-blue-50 rounded-md border border-blue-200"
+                      >
+                        {group.Groupname}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+
+            {schools.length > itemsPerPage && (
+              <div className="flex items-center justify-center gap-4 pt-2">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  前へ
+                </button>
+
+                <span className="text-blue-800 font-semibold">
+                  {currentPage} / {totalPages}
+                </span>
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  次へ
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

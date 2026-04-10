@@ -1045,6 +1045,7 @@ export default function ProfilePage() {
 
       setEditing(false);
       alert("プロフィールを更新しました！");
+      window.location.reload();
     } catch (err) {
       console.error("更新エラー:", err);
       alert("プロフィール更新に失敗しました");

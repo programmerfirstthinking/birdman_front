@@ -708,32 +708,34 @@ return (
                 </p>
 
                 {/* 下段 */}
-                <div className="flex justify-between items-end">
+                <div className="flex items-end gap-3">
 
                   {/* 左：操作 */}
-                  {currentUser && comment.UserID === currentUser.id && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingCommentId(comment.ID);
-                          setEditCommentContent(comment.Content);
-                        }}
-                        className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm"
-                      >
-                        編集
-                      </button>
+                  <div>
+                    {currentUser && comment.UserID === currentUser.id && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingCommentId(comment.ID);
+                            setEditCommentContent(comment.Content);
+                          }}
+                          className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm"
+                        >
+                          編集
+                        </button>
 
-                      <button
-                        onClick={() => deleteComment(comment.ID, comment.UserID)}
-                        className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm"
-                      >
-                        削除
-                      </button>
-                    </div>
-                  )}
+                        <button
+                          onClick={() => deleteComment(comment.ID, comment.UserID)}
+                          className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm"
+                        >
+                          削除
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* 右：メタ情報 */}
-                  <div className="text-right text-xs text-blue-600">
+                  <div className="ml-auto text-right text-xs text-blue-600">
                     <div>ユーザー: {getUserName(comment.UserID)}</div>
                     <div>学校: {getUserSchoolName(comment.UserID)}</div>
                     <div>

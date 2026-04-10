@@ -2272,6 +2272,7 @@ type ApiResponse = {
   message: string;
   data: GroupContent;
   current_user?: { id: number };
+  owner_name?: string;
 };
 
 export default function SchoolsPage() {
@@ -2669,9 +2670,14 @@ export default function SchoolsPage() {
           // 表示モード UI
           // ==============================
           <div className="space-y-6">
-            <h3 className="text-2xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3">
-              {responseData.data.group_contents_name}
-            </h3>
+            <div className="border-b-2 border-blue-200 pb-3">
+              <h3 className="text-2xl font-bold text-blue-900">
+                {responseData.data.group_contents_name}
+              </h3>
+              <p className="mt-2 text-sm text-blue-700">
+                作成者: {responseData.owner_name ?? `ID:${responseData.data.user_id}`}
+              </p>
+            </div>
             
             {/* PDF ダウンロードボタン (DBデータにURLが存在する時のみ表示) */}
             {responseData.data.pdf_url && (
