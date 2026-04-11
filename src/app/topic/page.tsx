@@ -601,7 +601,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAuth, User } from "firebase/auth";
 import { initializeApp,getApp,getApps } from "firebase/app";
@@ -651,7 +651,36 @@ const fetcher = async (url: string) => {
 // ----------------------
 export default function Main() {
   const router = useRouter();
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => {
+    if (typeof window === "undefined") {
+      return 1;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const pageFromUrl = Number(params.get("page") ?? "1");
+    return Number.isFinite(pageFromUrl) && pageFromUrl > 0 ? pageFromUrl : 1;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    if (currentPage === 1) {
+      params.delete("page");
+    } else {
+      params.set("page", String(currentPage));
+    }
+
+    const query = params.toString();
+    const nextUrl = query
+      ? `${window.location.pathname}?${query}`
+      : window.location.pathname;
+
+    window.history.replaceState(null, "", nextUrl);
+  }, [currentPage]);
 
   // ✅ 学校一覧（キャッシュされる）
   const { data: schoolData, isLoading: loadingSchools } = useSWR(
