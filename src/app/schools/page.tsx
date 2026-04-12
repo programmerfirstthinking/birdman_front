@@ -649,8 +649,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { getApp, getApps, initializeApp } from "firebase/app";
 import useSWR from "swr";
 import { API_BASE_URL } from "../api/api";
+import { firebaseConfig } from "../firebaseconfig/firebase";
 
 // ----------------------
 // 型定義
@@ -670,6 +673,9 @@ type SchoolWithGroups = {
   groups: Group[];
 };
 
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const auth = getAuth(app);
+
 // ----------------------
 // fetcher
 // ----------------------
@@ -684,6 +690,8 @@ const fetcher = (url: string) =>
 // ----------------------
 export default function SchoolsPage() {
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
+  const [authChecked, setAuthChecked] = useState(false);
   const [currentPage, setCurrentPage] = useState(() => {
     if (typeof window === "undefined") {
       return 1;
@@ -714,6 +722,15 @@ export default function SchoolsPage() {
 
     window.history.replaceState(null, "", nextUrl);
   }, [currentPage]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setAuthChecked(true);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // ✅ SWRで取得（自動キャッシュ）
   const { data, isLoading, error } = useSWR(
@@ -759,6 +776,22 @@ export default function SchoolsPage() {
   // ----------------------
   // JSX
   // ----------------------
+  if (authChecked && !currentUser) {
+    return (
+      <div className="min-h-screen bg-blue-100 p-6 flex items-center justify-center">
+        <div className="bg-white shadow-xl rounded-2xl p-8 flex flex-col items-center gap-4">
+          <p className="text-blue-700">ログインしていません</p>
+          <button
+            onClick={() => router.push("/signup")}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+          >
+            signupページへ
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center bg-blue-100 p-6">
 

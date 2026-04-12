@@ -2247,6 +2247,7 @@ import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import { getApps, initializeApp } from "firebase/app";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
 import { API_BASE_URL } from "../../api/api";
@@ -2646,10 +2647,16 @@ export default function SchoolsPage() {
               <div className="flex-1 border border-blue-200 p-6 rounded-lg bg-blue-50 overflow-y-auto prose max-w-none shadow-inner">
                 {markdown ? (
                   <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
+                    remarkPlugins={[remarkGfm, remarkBreaks]}
                     components={{
                       img: ({ node, ...props }) => (
                         <img {...props} style={{ maxWidth: "100%", margin: "8px 0", borderRadius: "6px", border: "1px solid #cbd5e1" }} alt="" />
+                      ),
+                      p: ({ node, ...props }) => (
+                        <p {...props} style={{ marginBottom: "1.1rem", lineHeight: 1.8 }} />
+                      ),
+                      br: ({ node, ...props }) => (
+                        <br {...props} style={{ display: "block", marginBottom: "0.9em", lineHeight: 1.8 }} />
                       ),
                       a: ({ node, ...props }) => (
                         <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" />
@@ -2700,10 +2707,16 @@ export default function SchoolsPage() {
             {/* マークダウン表示エリア */}
             <div className="border border-blue-200 p-6 rounded-lg bg-blue-50 prose max-w-none shadow-sm min-h-[300px]">
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
                   img: ({ node, ...props }) => (
                     <img {...props} style={{ maxWidth: "100%", margin: "16px 0", borderRadius: "8px", border: "1px solid #cbd5e1" }} alt="" />
+                  ),
+                  p: ({ node, ...props }) => (
+                    <p {...props} style={{ marginBottom: "1.1rem", lineHeight: 1.8 }} />
+                  ),
+                  br: ({ node, ...props }) => (
+                    <br {...props} style={{ display: "block", marginBottom: "0.9em", lineHeight: 1.8 }} />
                   ),
                   a: ({ node, ...props }) => {
                     return <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-semibold" />;

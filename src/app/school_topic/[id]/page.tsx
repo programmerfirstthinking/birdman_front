@@ -958,175 +958,180 @@ export default function CreateGroup() {
           グループ作成画面
         </h2>
 
-        {!currentUser && (
-          <button
-            onClick={signInWithGoogle}
-            className="block mx-auto mb-8 px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
-          >
-            Googleでログイン
-          </button>
-        )}
-
-        {currentUser && canManageCurrentSchool && (
-          <form onSubmit={handleSubmitGroup} className="flex gap-4 mb-8">
-            <input
-              type="text"
-              placeholder="グループ名を入力"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              required
-              className="flex-1 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+        {!currentUser ? (
+          <div className="flex flex-col items-center gap-4 mb-8">
+            <p className="text-center text-blue-700">ログインしてください</p>
             <button
-              type="submit"
-              disabled={loading}
-              className={`px-4 py-3 rounded-lg text-white font-semibold ${
-                loading ? "bg-blue-300 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
-              } transition`}
+              onClick={() => router.push("/signup")}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
             >
-              {loading ? "作成中..." : "グループ作成"}
+              signupページへ
             </button>
-          </form>
-        )}
-
-        <h3 className="text-2xl font-semibold text-blue-700 mb-6">
-          全グループ一覧
-        </h3>
-
-        {fetchingGroups ? (
-          <p className="text-center text-blue-500">読み込み中...</p>
-        ) : groups.length === 0 ? (
-          <p className="text-center text-blue-500">まだグループはありません</p>
+          </div>
         ) : (
-          <div className="flex flex-col gap-6">
-            {groups.map((g) => (
-              <div
-                key={g.id}
-                className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition"
-              >
-                {editingGroupId === g.id && canManageCurrentSchool && loginUserId === g.userId ? (
-                  <div className="flex gap-3 mb-4">
-                    <input
-                      type="text"
-                      value={editingGroupName}
-                      onChange={(e) => setEditingGroupName(e.target.value)}
-                      className="flex-1 p-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    />
-                    <button
-                      onClick={() => handleSaveGroup(g.id)}
-                      className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-                    >
-                      保存
-                    </button>
-                  </div>
-                ) : (
-                  <h4 className="text-xl font-semibold text-blue-800 mb-2">
-                    グループ名: {g.groupName}
-                  </h4>
-                )}
+          <>
+            {canManageCurrentSchool && (
+              <form onSubmit={handleSubmitGroup} className="flex gap-4 mb-8">
+                <input
+                  type="text"
+                  placeholder="グループ名を入力"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  required
+                  className="flex-1 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`px-4 py-3 rounded-lg text-white font-semibold ${
+                    loading ? "bg-blue-300 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+                  } transition`}
+                >
+                  {loading ? "作成中..." : "グループ作成"}
+                </button>
+              </form>
+            )}
 
-                {/* <p className="text-blue-600 mb-1">ユーザーID: {g.userId}</p>
-                <p className="text-blue-600 mb-1">学校ID: {g.schoolId}</p> */}
-                <p className="text-blue-600 mb-1">作成者: {g.ownerName || `ID:${g.userId}`}</p>
-                <p className="text-blue-600 mb-2">
-                  作成日時: {new Date(g.createdAt).toLocaleString()}
-                </p>
+            <h3 className="text-2xl font-semibold text-blue-700 mb-6">
+              全グループ一覧
+            </h3>
 
-                <div className="flex gap-3 flex-wrap mb-4">
-                  {/* {loginUserId === g.userId && editingGroupId !== g.id && (
-                    <div>
-                      <button
-                        onClick={() => { setEditingGroupId(g.id); setEditingGroupName(g.groupName); }}
-                        className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
-                      >
-                        編集
-                      </button>
-                      <button>
-                        削除
-                      </button>
-                    </div>
-           
-                  )} */}
-
-                  {canManageCurrentSchool && loginUserId === g.userId && editingGroupId !== g.id && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => { setEditingGroupId(g.id); setEditingGroupName(g.groupName); }}
-                        className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
-                      >
-                        編集
-                      </button>
-
-                      <button
-                        onClick={async () => {
-                          if (!currentUser) return;
-                          if (!confirm("本当にこのグループを削除しますか？")) return;
-
-                          try {
-                            const idToken = await currentUser.getIdToken();
-                            const res = await fetch(`${API_BASE_URL}/groups/${g.id}`, {
-                              method: "DELETE",
-                              headers: {
-                                "Content-Type": "application/json",
-                                Authorization: `Bearer ${idToken}`, // 認証が必要なら
-                              },
-                            });
-
-                            if (!res.ok) {
-                              const errData = await res.json();
-                              console.error("削除失敗:", errData);
-                              alert(errData.error || "グループ削除に失敗しました");
-                              return;
-                            }
-
-                            alert("グループを削除しました");
-                            await mutate(); // SWRで最新データに更新
-
-                          } catch (err) {
-                            console.error("削除エラー:", err);
-                            alert("グループ削除に失敗しました");
-                          }
-                        }}
-                        className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-                      >
-                        削除
-                      </button>
-                    </div>
-                  )}
-
-                  {canManageCurrentSchool && (
-                    <button
-                      onClick={() => handleAddContent(g.id)}
-                      className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-                    >
-                      追加
-                    </button>
-                  )}
-                </div>
-
-                {g.contents.length > 0 ? (
-                  <div className="flex flex-col gap-3 pl-4">
-                    {g.contents.map((c) => (
-                      <div
-                        key={c.id}
-                        className="bg-blue-50 border border-blue-200 rounded-lg p-3"
-                      >
-                        <p className="font-semibold text-blue-700">トピック: {c.contentName}</p>
+            {fetchingGroups ? (
+              <p className="text-center text-blue-500">読み込み中...</p>
+            ) : groups.length === 0 ? (
+              <p className="text-center text-blue-500">まだグループはありません</p>
+            ) : (
+              <div className="flex flex-col gap-6">
+                {groups.map((g) => (
+                  <div
+                    key={g.id}
+                    className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition"
+                  >
+                    {editingGroupId === g.id && canManageCurrentSchool && loginUserId === g.userId ? (
+                      <div className="flex gap-3 mb-4">
+                        <input
+                          type="text"
+                          value={editingGroupName}
+                          onChange={(e) => setEditingGroupName(e.target.value)}
+                          className="flex-1 p-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
                         <button
-                          onClick={() => router.push(`/see_school_topic/${c.id}`)}
-                          className="mt-2 px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                          onClick={() => handleSaveGroup(g.id)}
+                          className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
                         >
-                          詳しくみる
+                          保存
                         </button>
                       </div>
-                    ))}
+                    ) : (
+                      <h4 className="text-xl font-semibold text-blue-800 mb-2">
+                        グループ名: {g.groupName}
+                      </h4>
+                    )}
+
+                    {/* <p className="text-blue-600 mb-1">ユーザーID: {g.userId}</p>
+                    <p className="text-blue-600 mb-1">学校ID: {g.schoolId}</p> */}
+                    <p className="text-blue-600 mb-1">作成者: {g.ownerName || `ID:${g.userId}`}</p>
+                    <p className="text-blue-600 mb-2">
+                      作成日時: {new Date(g.createdAt).toLocaleString()}
+                    </p>
+
+                    <div className="flex gap-3 flex-wrap mb-4">
+                      {/* {loginUserId === g.userId && editingGroupId !== g.id && (
+                        <div>
+                          <button
+                            onClick={() => { setEditingGroupId(g.id); setEditingGroupName(g.groupName); }}
+                            className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                          >
+                            編集
+                          </button>
+                          <button>
+                            削除
+                          </button>
+                        </div>
+              
+                      )} */}
+
+                      {canManageCurrentSchool && loginUserId === g.userId && editingGroupId !== g.id && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => { setEditingGroupId(g.id); setEditingGroupName(g.groupName); }}
+                            className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                          >
+                            編集
+                          </button>
+
+                          <button
+                            onClick={async () => {
+                              if (!currentUser) return;
+                              if (!confirm("本当にこのグループを削除しますか？")) return;
+
+                              try {
+                                const idToken = await currentUser.getIdToken();
+                                const res = await fetch(`${API_BASE_URL}/groups/${g.id}`, {
+                                  method: "DELETE",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${idToken}`, // 認証が必要なら
+                                  },
+                                });
+
+                                if (!res.ok) {
+                                  const errData = await res.json();
+                                  console.error("削除失敗:", errData);
+                                  alert(errData.error || "グループ削除に失敗しました");
+                                  return;
+                                }
+
+                                alert("グループを削除しました");
+                                await mutate(); // SWRで最新データに更新
+
+                              } catch (err) {
+                                console.error("削除エラー:", err);
+                                alert("グループ削除に失敗しました");
+                              }
+                            }}
+                            className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                          >
+                            削除
+                          </button>
+                        </div>
+                      )}
+
+                      {canManageCurrentSchool && (
+                        <button
+                          onClick={() => handleAddContent(g.id)}
+                          className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                        >
+                          追加
+                        </button>
+                      )}
+                    </div>
+
+                    {g.contents.length > 0 ? (
+                      <div className="flex flex-col gap-3 pl-4">
+                        {g.contents.map((c) => (
+                          <div
+                            key={c.id}
+                            className="bg-blue-50 border border-blue-200 rounded-lg p-3"
+                          >
+                            <p className="font-semibold text-blue-700">トピック: {c.contentName}</p>
+                            <button
+                              onClick={() => router.push(`/see_school_topic/${c.id}`)}
+                              className="mt-2 px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                            >
+                              詳しくみる
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-blue-500">コンテンツはありません</p>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-blue-500">コンテンツはありません</p>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>

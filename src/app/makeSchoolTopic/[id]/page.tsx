@@ -1042,6 +1042,7 @@ import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
 import { API_BASE_URL } from "../../api/api";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -1361,8 +1362,27 @@ const MarkdownImageUploader: React.FC = () => {
           </h3>
 
           <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
+            remarkPlugins={[remarkGfm, remarkBreaks]}
             components={{
+              br: ({ node, ...props }) => (
+                <br
+                  {...props}
+                  style={{
+                    display: "block",
+                    marginBottom: "0.9em",
+                    lineHeight: 1.8,
+                  }}
+                />
+              ),
+              p: ({ node, ...props }) => (
+                <p
+                  {...props}
+                  style={{
+                    margin: "0 0 1.1rem 0",
+                    lineHeight: 1.8,
+                  }}
+                />
+              ),
               img: ({ node, ...props }) => (
                 <img
                   {...props}

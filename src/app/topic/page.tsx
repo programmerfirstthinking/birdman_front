@@ -603,7 +603,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAuth, User } from "firebase/auth";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import { initializeApp,getApp,getApps } from "firebase/app";
 import { firebaseConfig } from "../firebaseconfig/firebase";
 import { API_BASE_URL } from "../api/api";
@@ -651,6 +651,8 @@ const fetcher = async (url: string) => {
 // ----------------------
 export default function Main() {
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
+  const [authChecked, setAuthChecked] = useState(false);
   const [currentPage, setCurrentPage] = useState(() => {
     if (typeof window === "undefined") {
       return 1;
@@ -681,6 +683,15 @@ export default function Main() {
 
     window.history.replaceState(null, "", nextUrl);
   }, [currentPage]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setAuthChecked(true);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // ✅ 学校一覧（キャッシュされる）
   const { data: schoolData, isLoading: loadingSchools } = useSWR(
@@ -789,6 +800,21 @@ export default function Main() {
   const handlePrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
   const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
 
+  if (authChecked && !currentUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 p-6 flex items-center justify-center">
+        <div className="bg-white shadow-xl rounded-2xl p-8 flex flex-col items-center gap-4">
+          <p className="text-blue-700">ログインしていません</p>
+          <button
+            onClick={() => router.push("/signup")}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+          >
+            signupページへ
+          </button>
+        </div>
+      </div>
+    );
+  }
 
     return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 p-6">
@@ -837,7 +863,7 @@ export default function Main() {
             {showCreateForm && (
               <div className="bg-white shadow-xl rounded-2xl p-8 max-w-3xl mx-auto w-full">
                 <h2 className="text-2xl font-semibold mb-6 text-gray-700">
-                  新しいトピックを作成
+                  新しい知恵袋を作成
                 </h2>
 
                 <form
@@ -880,7 +906,7 @@ export default function Main() {
             {/* ---------------- トピック一覧 ---------------- */}
             <div>
               <h2 className="text-2xl font-semibold mb-6 text-gray-700">
-                トピック一覧
+                知恵袋一覧
               </h2>
 
               {loadingTopics ? (
@@ -960,7 +986,7 @@ export default function Main() {
               className="bg-indigo-500 text-white py-3 rounded-lg"
               onClick={() => setShowCreateForm(prev => !prev)}
             >
-              トピックを作成
+              知恵袋を作成
             </button>
 
             <button
@@ -971,14 +997,14 @@ export default function Main() {
             </button>
 
             <button
-              className="bg-green-500 text-white py-3 rounded-lg"
+              className="bg-red-500 text-white py-3 rounded-lg"
               onClick={() => router.push("/how_to_use")}
             >
               使い方
             </button>
 
             <button
-              className="bg-green-500 text-white py-3 rounded-lg"
+              className="bg-pink-500 text-white py-3 rounded-lg"
               onClick={() => router.push("/mypage")}
             >
               マイページへ
