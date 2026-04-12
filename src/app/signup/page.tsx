@@ -977,9 +977,6 @@ export default function LoginPage() {
 
   const isFormValid = name && bio && schoolId && password;
 
-  // ----------------------
-  // JSX
-  // ----------------------
   return (
     <div style={{
       display: "flex",
