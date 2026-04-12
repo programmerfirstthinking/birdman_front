@@ -812,261 +812,7 @@
 
 
 
-// // // リロードしたらしっかり動く
-// "use client";
-
-// import { useState, useEffect } from "react";
-// import { initializeApp } from "firebase/app";
-// import { useRouter } from "next/navigation";
-// import {
-//   getAuth,
-//   signInWithPopup,
-//   GoogleAuthProvider,
-//   onAuthStateChanged, // ← ★追加
-//   User
-// } from "firebase/auth";
-// import { firebaseConfig } from "../firebaseconfig/firebase";
-// import { API_BASE_URL } from "../api/api";
-
-// // ----------------------
-// // Firebase 設定
-// // ----------------------
-// // const firebaseConfig = {
-// //   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
-// //   authDomain: "share-info-project.firebaseapp.com",
-// //   projectId: "share-info-project",
-// //   storageBucket: "share-info-project.firebasestorage.app",
-// //   messagingSenderId: "10017220780",
-// //   appId: "1:10017220780:web:4820d384929f2d84735709",
-// //   measurementId: "G-42VYEZ51GF",
-// // };
-
-// const app = initializeApp(firebaseConfig);
-// const provider = new GoogleAuthProvider();
-
-// // ----------------------
-// // 型定義
-// // ----------------------
-// type School = {
-//   ID: number;
-//   SchoolName: string;
-// };
-
-// // ----------------------
-// // コンポーネント
-// // ----------------------
-// export default function LoginPage() {
-//   const [name, setName] = useState("");
-//   const [bio, setBio] = useState("");
-//   const [schoolId, setSchoolId] = useState(""); // ← 文字列で保持
-//   const [password, setPassword] = useState("");
-//   const [schools, setSchools] = useState<School[]>([]);
-
-//   const router = useRouter();
-//   const auth = getAuth(app);
-
-//   // ----------------------
-// // 自動ログインチェック
-// // ----------------------
-//   useEffect(() => {
-//     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-//       if (!user) return;
-
-//       try {
-//         const idToken = await user.getIdToken();
-
-//         const res = await fetch(`${API_BASE_URL}/is_user_exist`, {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//           },
-//           body: JSON.stringify({ idToken }),
-//         });
-
-//         if (res.status === 200) {
-//           const data = await res.json();
-
-//           // ユーザー存在
-//           if (data.exist === true || data.uid) {
-//             router.push("/topic");
-//           }
-//         }
-//       } catch (err) {
-//         console.error("ユーザー存在確認エラー:", err);
-//       }
-//     });
-
-//     return () => unsubscribe();
-//   }, [auth, router]);
-
-//   // ----------------------
-//   // 学校一覧を取得
-//   // ----------------------
-//   useEffect(() => {
-//     const fetchSchools = async () => {
-//       try {
-//         // const res = await fetch("http://localhost:8080/schools_list");
-//         const res = await fetch(`${API_BASE_URL}/schools_list`);
-//         if (!res.ok) throw new Error("学校取得失敗");
-//         const data: School[] = await res.json();
-//         setSchools(data);
-//       } catch (err) {
-//         console.error(err);
-//         alert("学校の取得に失敗しました");
-//       }
-//     };
-//     fetchSchools();
-//   }, []);
-
-//   // ----------------------
-//   // バックエンド送信
-//   // ----------------------
-//   const sendToBackend = async (user: User) => {
-//     if (!user) return;
-
-//     const idToken = await user.getIdToken();
-
-//     try {
-//       // const res = await fetch("http://localhost:8080/login", {
-//       const res = await fetch(`${API_BASE_URL}/login`, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({
-//           idToken,
-//           name,
-//           introduce: bio,
-//           schoolId, // 文字列で送信
-//           password,
-//         }),
-//       });
-
-//       if (res.status === 200) {
-//         const data = await res.json();
-//         if (data.uid) {
-//           router.push("/topic");
-//         }
-//       } else {
-//         const errData = await res.json();
-//         console.error("バックエンドエラー:", errData);
-//         alert(errData.error || "ログインに失敗しました");
-//       }
-//     } catch (err) {
-//       console.error("バックエンド通信エラー:", err);
-//       alert("ログインに失敗しました");
-//     }
-//   };
-
-//   // ----------------------
-//   // Googleログイン
-//   // ----------------------
-//   const handleGoogleLogin = async () => {
-//     if (!name || !bio || !schoolId || !password) {
-//       alert("すべての項目を入力してください");
-//       return;
-//     }
-
-//     try {
-//       const result = await signInWithPopup(auth, provider);
-//       const user = result.user;
-//       await sendToBackend(user);
-//     } catch (err) {
-//       console.error("Googleサインインエラー:", err);
-//       alert("Googleサインインに失敗しました");
-//     }
-//   };
-
-//   const isFormValid = name && bio && schoolId && password;
-
-//   // ----------------------
-//   // JSX
-//   // ----------------------
-//   return (
-//     <div style={{
-//       display: "flex",
-//       flexDirection: "column",
-//       alignItems: "center",
-//       justifyContent: "center",
-//       minHeight: "100vh",
-//       backgroundColor: "#f0f4f8",
-//       fontFamily: "Arial, sans-serif",
-//       padding: "20px",
-//     }}>
-//       <h1 style={{ fontSize: "2rem", marginBottom: "20px" }}>Birdman Webへようこそ</h1>
-
-//       <div style={{
-//         backgroundColor: "white",
-//         padding: "30px",
-//         borderRadius: "10px",
-//         boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-//         width: "100%",
-//         maxWidth: "400px",
-//         display: "flex",
-//         flexDirection: "column",
-//         gap: "15px"
-//       }}>
-//         <input
-//           type="text"
-//           placeholder="名前"
-//           value={name}
-//           onChange={e => setName(e.target.value)}
-//           maxLength={10}
-//           style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
-//         />
-
-//         <textarea
-//           placeholder="自己紹介"
-//           value={bio}
-//           onChange={e => setBio(e.target.value)}
-//           maxLength={30}
-//           style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc", resize: "none" }}
-//         />
-
-//         <select
-//           value={schoolId}
-//           onChange={e => setSchoolId(e.target.value)} // ← 文字列のまま保持
-//           style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
-//         >
-//           <option value="">学校を選択してください</option>
-//           {schools.map(s => (
-//             <option key={s.ID} value={s.ID.toString()}>
-//               {s.SchoolName}
-//             </option>
-//           ))}
-//         </select>
-
-//         <input
-//           type="password"
-//           placeholder="パスワード"
-//           value={password}
-//           onChange={e => setPassword(e.target.value)}
-//           maxLength={20}
-//           style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
-//         />
-
-//         <button
-//           onClick={handleGoogleLogin}
-//           disabled={!isFormValid}
-//           style={{
-//             padding: "12px",
-//             borderRadius: "5px",
-//             border: "none",
-//             backgroundColor: isFormValid ? "#3b82f6" : "#93c5fd",
-//             color: "white",
-//             fontWeight: "bold",
-//             cursor: isFormValid ? "pointer" : "not-allowed",
-//           }}
-//         >
-//           Googleでログイン
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
-
+// // リロードしたらしっかり動く
 "use client";
 
 import { useState, useEffect } from "react";
@@ -1074,24 +820,32 @@ import { initializeApp } from "firebase/app";
 import { useRouter } from "next/navigation";
 import {
   getAuth,
-  signInWithRedirect,
+  signInWithPopup,
   GoogleAuthProvider,
-  getRedirectResult,
-  onAuthStateChanged,
-  User,
+  onAuthStateChanged, // ← ★追加
+  User
 } from "firebase/auth";
-
 import { firebaseConfig } from "../firebaseconfig/firebase";
 import { API_BASE_URL } from "../api/api";
 
 // ----------------------
-// Firebase初期化
+// Firebase 設定
 // ----------------------
+// const firebaseConfig = {
+//   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
+//   authDomain: "share-info-project.firebaseapp.com",
+//   projectId: "share-info-project",
+//   storageBucket: "share-info-project.firebasestorage.app",
+//   messagingSenderId: "10017220780",
+//   appId: "1:10017220780:web:4820d384929f2d84735709",
+//   measurementId: "G-42VYEZ51GF",
+// };
+
 const app = initializeApp(firebaseConfig);
 const provider = new GoogleAuthProvider();
 
 // ----------------------
-// 型
+// 型定義
 // ----------------------
 type School = {
   ID: number;
@@ -1104,7 +858,7 @@ type School = {
 export default function LoginPage() {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
-  const [schoolId, setSchoolId] = useState("");
+  const [schoolId, setSchoolId] = useState(""); // ← 文字列で保持
   const [password, setPassword] = useState("");
   const [schools, setSchools] = useState<School[]>([]);
 
@@ -1112,8 +866,8 @@ export default function LoginPage() {
   const auth = getAuth(app);
 
   // ----------------------
-  // Firebaseログイン状態監視
-  // ----------------------
+// 自動ログインチェック
+// ----------------------
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
@@ -1123,19 +877,22 @@ export default function LoginPage() {
 
         const res = await fetch(`${API_BASE_URL}/is_user_exist`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ idToken }),
         });
 
         if (res.status === 200) {
           const data = await res.json();
 
+          // ユーザー存在
           if (data.exist === true || data.uid) {
             router.push("/topic");
           }
         }
       } catch (err) {
-        console.error("ユーザー確認エラー:", err);
+        console.error("ユーザー存在確認エラー:", err);
       }
     });
 
@@ -1143,33 +900,14 @@ export default function LoginPage() {
   }, [auth, router]);
 
   // ----------------------
-  // redirectログイン結果取得（スマホ対応の核心）
-  // ----------------------
-  useEffect(() => {
-    const handleRedirect = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (!result) return;
-
-        const user = result.user;
-        await sendToBackend(user);
-      } catch (err) {
-        console.error("redirectログインエラー:", err);
-      }
-    };
-
-    handleRedirect();
-  }, []);
-
-  // ----------------------
-  // 学校取得
+  // 学校一覧を取得
   // ----------------------
   useEffect(() => {
     const fetchSchools = async () => {
       try {
+        // const res = await fetch("http://localhost:8080/schools_list");
         const res = await fetch(`${API_BASE_URL}/schools_list`);
         if (!res.ok) throw new Error("学校取得失敗");
-
         const data: School[] = await res.json();
         setSchools(data);
       } catch (err) {
@@ -1177,7 +915,6 @@ export default function LoginPage() {
         alert("学校の取得に失敗しました");
       }
     };
-
     fetchSchools();
   }, []);
 
@@ -1190,6 +927,7 @@ export default function LoginPage() {
     const idToken = await user.getIdToken();
 
     try {
+      // const res = await fetch("http://localhost:8080/login", {
       const res = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1197,7 +935,7 @@ export default function LoginPage() {
           idToken,
           name,
           introduce: bio,
-          schoolId,
+          schoolId, // 文字列で送信
           password,
         }),
       });
@@ -1209,15 +947,17 @@ export default function LoginPage() {
         }
       } else {
         const errData = await res.json();
-        alert(errData.error || "ログイン失敗");
+        console.error("バックエンドエラー:", errData);
+        alert(errData.error || "ログインに失敗しました");
       }
     } catch (err) {
       console.error("バックエンド通信エラー:", err);
+      alert("ログインに失敗しました");
     }
   };
 
   // ----------------------
-  // Googleログイン（redirect方式）
+  // Googleログイン
   // ----------------------
   const handleGoogleLogin = async () => {
     if (!name || !bio || !schoolId || !password) {
@@ -1226,62 +966,69 @@ export default function LoginPage() {
     }
 
     try {
-      await signInWithRedirect(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      await sendToBackend(user);
     } catch (err) {
-      console.error("Googleログインエラー:", err);
+      console.error("Googleサインインエラー:", err);
+      alert("Googleサインインに失敗しました");
     }
   };
 
   const isFormValid = name && bio && schoolId && password;
 
   // ----------------------
-  // UI
+  // JSX
   // ----------------------
   return (
-    <div
-      style={{
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "100vh",
+      backgroundColor: "#f0f4f8",
+      fontFamily: "Arial, sans-serif",
+      padding: "20px",
+    }}>
+      <h1 style={{ fontSize: "2rem", marginBottom: "20px" }}>Birdman Webへようこそ</h1>
+
+      <div style={{
+        backgroundColor: "white",
+        padding: "30px",
+        borderRadius: "10px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        width: "100%",
+        maxWidth: "400px",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        backgroundColor: "#f0f4f8",
-        padding: "20px",
-      }}
-    >
-      <h1>Birdman Webへようこそ</h1>
-
-      <div
-        style={{
-          background: "#fff",
-          padding: "30px",
-          borderRadius: "10px",
-          width: "100%",
-          maxWidth: "400px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "15px",
-        }}
-      >
+        gap: "15px"
+      }}>
         <input
+          type="text"
           placeholder="名前"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={e => setName(e.target.value)}
+          maxLength={10}
+          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
         />
 
         <textarea
           placeholder="自己紹介"
           value={bio}
-          onChange={(e) => setBio(e.target.value)}
+          onChange={e => setBio(e.target.value)}
+          maxLength={30}
+          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc", resize: "none" }}
         />
 
         <select
           value={schoolId}
-          onChange={(e) => setSchoolId(e.target.value)}
+          onChange={e => setSchoolId(e.target.value)} // ← 文字列のまま保持
+          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
         >
-          <option value="">学校を選択</option>
-          {schools.map((s) => (
-            <option key={s.ID} value={s.ID}>
+          <option value="">学校を選択してください</option>
+          {schools.map(s => (
+            <option key={s.ID} value={s.ID.toString()}>
               {s.SchoolName}
             </option>
           ))}
@@ -1291,12 +1038,23 @@ export default function LoginPage() {
           type="password"
           placeholder="パスワード"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={e => setPassword(e.target.value)}
+          maxLength={20}
+          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
         />
 
         <button
           onClick={handleGoogleLogin}
           disabled={!isFormValid}
+          style={{
+            padding: "12px",
+            borderRadius: "5px",
+            border: "none",
+            backgroundColor: isFormValid ? "#3b82f6" : "#93c5fd",
+            color: "white",
+            fontWeight: "bold",
+            cursor: isFormValid ? "pointer" : "not-allowed",
+          }}
         >
           Googleでログイン
         </button>
@@ -1304,3 +1062,245 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
+
+
+
+// "use client";
+
+// import { useState, useEffect } from "react";
+// import { initializeApp } from "firebase/app";
+// import { useRouter } from "next/navigation";
+// import {
+//   getAuth,
+//   signInWithRedirect,
+//   GoogleAuthProvider,
+//   getRedirectResult,
+//   onAuthStateChanged,
+//   User,
+// } from "firebase/auth";
+
+// import { firebaseConfig } from "../firebaseconfig/firebase";
+// import { API_BASE_URL } from "../api/api";
+
+// // ----------------------
+// // Firebase初期化
+// // ----------------------
+// const app = initializeApp(firebaseConfig);
+// const provider = new GoogleAuthProvider();
+
+// // ----------------------
+// // 型
+// // ----------------------
+// type School = {
+//   ID: number;
+//   SchoolName: string;
+// };
+
+// // ----------------------
+// // コンポーネント
+// // ----------------------
+// export default function LoginPage() {
+//   const [name, setName] = useState("");
+//   const [bio, setBio] = useState("");
+//   const [schoolId, setSchoolId] = useState("");
+//   const [password, setPassword] = useState("");
+//   const [schools, setSchools] = useState<School[]>([]);
+
+//   const router = useRouter();
+//   const auth = getAuth(app);
+
+//   // ----------------------
+//   // Firebaseログイン状態監視
+//   // ----------------------
+//   useEffect(() => {
+//     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+//       if (!user) return;
+
+//       try {
+//         const idToken = await user.getIdToken();
+
+//         const res = await fetch(`${API_BASE_URL}/is_user_exist`, {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify({ idToken }),
+//         });
+
+//         if (res.status === 200) {
+//           const data = await res.json();
+
+//           if (data.exist === true || data.uid) {
+//             router.push("/topic");
+//           }
+//         }
+//       } catch (err) {
+//         console.error("ユーザー確認エラー:", err);
+//       }
+//     });
+
+//     return () => unsubscribe();
+//   }, [auth, router]);
+
+//   // ----------------------
+//   // redirectログイン結果取得（スマホ対応の核心）
+//   // ----------------------
+//   useEffect(() => {
+//     const handleRedirect = async () => {
+//       try {
+//         const result = await getRedirectResult(auth);
+//         if (!result) return;
+
+//         const user = result.user;
+//         await sendToBackend(user);
+//       } catch (err) {
+//         console.error("redirectログインエラー:", err);
+//       }
+//     };
+
+//     handleRedirect();
+//   }, []);
+
+//   // ----------------------
+//   // 学校取得
+//   // ----------------------
+//   useEffect(() => {
+//     const fetchSchools = async () => {
+//       try {
+//         const res = await fetch(`${API_BASE_URL}/schools_list`);
+//         if (!res.ok) throw new Error("学校取得失敗");
+
+//         const data: School[] = await res.json();
+//         setSchools(data);
+//       } catch (err) {
+//         console.error(err);
+//         alert("学校の取得に失敗しました");
+//       }
+//     };
+
+//     fetchSchools();
+//   }, []);
+
+//   // ----------------------
+//   // バックエンド送信
+//   // ----------------------
+//   const sendToBackend = async (user: User) => {
+//     if (!user) return;
+
+//     const idToken = await user.getIdToken();
+
+//     try {
+//       const res = await fetch(`${API_BASE_URL}/login`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           idToken,
+//           name,
+//           introduce: bio,
+//           schoolId,
+//           password,
+//         }),
+//       });
+
+//       if (res.status === 200) {
+//         const data = await res.json();
+//         if (data.uid) {
+//           router.push("/topic");
+//         }
+//       } else {
+//         const errData = await res.json();
+//         alert(errData.error || "ログイン失敗");
+//       }
+//     } catch (err) {
+//       console.error("バックエンド通信エラー:", err);
+//     }
+//   };
+
+//   // ----------------------
+//   // Googleログイン（redirect方式）
+//   // ----------------------
+//   const handleGoogleLogin = async () => {
+//     if (!name || !bio || !schoolId || !password) {
+//       alert("すべての項目を入力してください");
+//       return;
+//     }
+
+//     try {
+//       await signInWithRedirect(auth, provider);
+//     } catch (err) {
+//       console.error("Googleログインエラー:", err);
+//     }
+//   };
+
+//   const isFormValid = name && bio && schoolId && password;
+
+//   // ----------------------
+//   // UI
+//   // ----------------------
+//   return (
+//     <div
+//       style={{
+//         display: "flex",
+//         flexDirection: "column",
+//         alignItems: "center",
+//         justifyContent: "center",
+//         minHeight: "100vh",
+//         backgroundColor: "#f0f4f8",
+//         padding: "20px",
+//       }}
+//     >
+//       <h1>Birdman Webへようこそ</h1>
+
+//       <div
+//         style={{
+//           background: "#fff",
+//           padding: "30px",
+//           borderRadius: "10px",
+//           width: "100%",
+//           maxWidth: "400px",
+//           display: "flex",
+//           flexDirection: "column",
+//           gap: "15px",
+//         }}
+//       >
+//         <input
+//           placeholder="名前"
+//           value={name}
+//           onChange={(e) => setName(e.target.value)}
+//         />
+
+//         <textarea
+//           placeholder="自己紹介"
+//           value={bio}
+//           onChange={(e) => setBio(e.target.value)}
+//         />
+
+//         <select
+//           value={schoolId}
+//           onChange={(e) => setSchoolId(e.target.value)}
+//         >
+//           <option value="">学校を選択</option>
+//           {schools.map((s) => (
+//             <option key={s.ID} value={s.ID}>
+//               {s.SchoolName}
+//             </option>
+//           ))}
+//         </select>
+
+//         <input
+//           type="password"
+//           placeholder="パスワード"
+//           value={password}
+//           onChange={(e) => setPassword(e.target.value)}
+//         />
+
+//         <button
+//           onClick={handleGoogleLogin}
+//           disabled={!isFormValid}
+//         >
+//           Googleでログイン
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
