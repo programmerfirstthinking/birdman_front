@@ -1106,8 +1106,8 @@ export default function ProfilePage() {
 
       {/* --- 取得したユーザーデータを全て表示 --- */}
       <div className="mt-6 p-4 bg-white border border-gray-300 rounded overflow-x-auto">
-        <h3 className="font-bold text-gray-700 mb-2">デバッグ用: 全ユーザーデータ</h3>
-        <pre>{JSON.stringify(user, null, 2)}</pre>
+        {/* <h3 className="font-bold text-gray-700 mb-2">デバッグ用: 全ユーザーデータ</h3>
+        <pre>{JSON.stringify(user, null, 2)}</pre> */}
       </div>
     </div>
   );
