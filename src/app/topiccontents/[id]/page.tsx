@@ -615,6 +615,24 @@ return (
         {isEditing && (
           <button
             onClick={async () => {
+              const trimmedEditTitle = editTitle.trim();
+              const trimmedEditContent = editContent.trim();
+
+              if (!trimmedEditTitle || !trimmedEditContent) {
+                alert("トピック名と内容を入力してください");
+                return;
+              }
+
+              if (trimmedEditTitle.length > 100) {
+                alert("トピック名は 100 文字以内で入力してください");
+                return;
+              }
+
+              if (trimmedEditContent.length > 5000) {
+                alert("内容は 5000 文字以内で入力してください");
+                return;
+              }
+
               const auth = getAuth();
               const user = auth.currentUser;
               if (!user) return;
@@ -626,8 +644,8 @@ return (
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   topicId: Number(id),
-                  title: editTitle,
-                  content: editContent,
+                  title: trimmedEditTitle,
+                  content: trimmedEditContent,
                   token: idToken,
                 }),
               });

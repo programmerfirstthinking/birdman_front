@@ -1253,7 +1253,7 @@ const MarkdownImageUploader: React.FC = () => {
     <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl p-6">
 
       <h2 className="text-2xl font-bold text-blue-800 text-center mb-6">
-        マークダウン入力（左）＋ プレビュー（右）
+        入力（左）＋ プレビュー（右）
       </h2>
 
       {/* 2カラムレイアウト */}
@@ -1277,7 +1277,7 @@ const MarkdownImageUploader: React.FC = () => {
             onChange={(e) => setMarkdown(e.target.value)}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            placeholder="ここにMarkdownを書いてください"
+            placeholder="ここに記事を書いてください"
             className="w-full h-64 p-3 mb-4 border border-blue-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
 

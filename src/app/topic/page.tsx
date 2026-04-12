@@ -714,9 +714,11 @@ export default function Main() {
   const [topicName, setTopicName] = useState("");
   const [topicContent, setTopicContent] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showSchoolMenu, setShowSchoolMenu] = useState(false);
+  const [showRightMenu, setShowRightMenu] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const MAX_TOPIC_NAME_LENGTH = 100;
-  const MAX_TOPIC_CONTENT_LENGTH = 2000;
+  const MAX_TOPIC_CONTENT_LENGTH = 5000;
 
   // ----------------------
   // ページネーション
@@ -818,10 +820,90 @@ export default function Main() {
 
     return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 p-6">
+      <div className="max-w-7xl mx-auto md:hidden mb-4">
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            className="w-full bg-blue-700 text-white py-3 rounded-lg font-semibold"
+            onClick={() => setShowSchoolMenu(prev => !prev)}
+          >
+            {showSchoolMenu ? "学校一覧を閉じる ✕" : "学校一覧 ☰"}
+          </button>
+
+          <button
+            className="w-full bg-indigo-500 text-white py-3 rounded-lg font-semibold"
+            onClick={() => setShowCreateForm(prev => !prev)}
+          >
+            知恵袋を作成
+          </button>
+
+          <button
+            className="w-full bg-slate-700 text-white py-3 rounded-lg font-semibold"
+            onClick={() => setShowRightMenu(prev => !prev)}
+          >
+            {showRightMenu ? "メニューを閉じる ✕" : "メニュー ☰"}
+          </button>
+        </div>
+
+        {showRightMenu && (
+          <div className="mt-3 bg-white shadow-xl rounded-2xl p-4 flex flex-col gap-3">
+            <button
+              className="bg-green-500 text-white py-3 rounded-lg"
+              onClick={() => router.push("/schools")}
+            >
+              学校一覧
+            </button>
+
+            <button
+              className="bg-red-500 text-white py-3 rounded-lg"
+              onClick={() => router.push("/how_to_use")}
+            >
+              使い方
+            </button>
+
+            <button
+              className="bg-pink-500 text-white py-3 rounded-lg"
+              onClick={() => router.push("/mypage")}
+            >
+              マイページへ
+            </button>
+          </div>
+        )}
+
+        {showSchoolMenu && (
+          <aside className="mt-3 bg-white shadow-xl rounded-2xl p-4 max-h-[70vh] overflow-y-auto hide-scrollbar">
+            <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">
+              学校一覧
+            </h2>
+
+            {loadingSchools ? (
+              <p className="text-center text-blue-600">読み込み中...</p>
+            ) : schools.length === 0 ? (
+              <p className="text-center text-blue-600">
+                学校が登録されていません
+              </p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {schools.map(school => (
+                  <button
+                    key={school.ID}
+                    onClick={() => road_to_school(school.ID)}
+                    className="bg-white shadow-md hover:shadow-lg rounded-xl p-3 text-left text-blue-800 border border-blue-200 hover:bg-blue-50"
+                  >
+                    <div className="text-xl font-semibold">
+                      {school.SchoolName}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </aside>
+        )}
+      </div>
+
       <div className="max-w-7xl mx-auto flex gap-6">
 
         {/* ---------------- サイドバー ---------------- */}
-        <aside className="w-1/5 bg-white shadow-xl rounded-2xl p-4 sticky top-6 h-[90vh] overflow-y-auto hide-scrollbar">
+        <aside className="hidden md:block w-1/5 bg-white shadow-xl rounded-2xl p-4 sticky top-6 h-[90vh] overflow-y-auto hide-scrollbar">
           <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">
             学校一覧
           </h2>
@@ -981,7 +1063,7 @@ export default function Main() {
           </div>
 
           {/* ---------------- 右サイド ---------------- */}
-          <div className="w-1/6 bg-white shadow-xl rounded-2xl p-4 h-fit sticky top-6 flex flex-col gap-4">
+          <div className="hidden md:flex w-1/6 bg-white shadow-xl rounded-2xl p-4 h-fit sticky top-6 flex-col gap-4">
             <button
               className="bg-indigo-500 text-white py-3 rounded-lg"
               onClick={() => setShowCreateForm(prev => !prev)}
@@ -989,26 +1071,28 @@ export default function Main() {
               知恵袋を作成
             </button>
 
-            <button
-              className="bg-green-500 text-white py-3 rounded-lg"
-              onClick={() => router.push("/schools")}
-            >
-              学校一覧
-            </button>
+            <div className="flex flex-col gap-4">
+              <button
+                className="bg-green-500 text-white py-3 rounded-lg"
+                onClick={() => router.push("/schools")}
+              >
+                学校一覧
+              </button>
 
-            <button
-              className="bg-red-500 text-white py-3 rounded-lg"
-              onClick={() => router.push("/how_to_use")}
-            >
-              使い方
-            </button>
+              <button
+                className="bg-red-500 text-white py-3 rounded-lg"
+                onClick={() => router.push("/how_to_use")}
+              >
+                使い方
+              </button>
 
-            <button
-              className="bg-pink-500 text-white py-3 rounded-lg"
-              onClick={() => router.push("/mypage")}
-            >
-              マイページへ
-            </button>
+              <button
+                className="bg-pink-500 text-white py-3 rounded-lg"
+                onClick={() => router.push("/mypage")}
+              >
+                マイページへ
+              </button>
+            </div>
           </div>
 
         </main>
