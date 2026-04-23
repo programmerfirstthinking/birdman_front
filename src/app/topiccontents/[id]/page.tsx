@@ -9,6 +9,7 @@ import { API_BASE_URL } from "../../api/api";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 // const firebaseConfig = {
 //   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
@@ -754,7 +755,14 @@ return (
 
                   {/* 右：メタ情報 */}
                   <div className="ml-auto text-right text-xs text-blue-600">
-                    <div>ユーザー: {getUserName(comment.UserID)}</div>
+                    <div>
+                      <Link
+                        href={`/user_profile/${comment.UserID}`}
+                        className="hover:underline hover:text-blue-800"
+                      >
+                        ユーザー: {getUserName(comment.UserID)}
+                      </Link>
+                    </div>
                     <div>学校: {getUserSchoolName(comment.UserID)}</div>
                     <div>
                       {new Date(comment.CreatedAt).toLocaleString()}

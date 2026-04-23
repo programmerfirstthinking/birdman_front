@@ -140,7 +140,10 @@ export default function SchoolsPage() {
 
     try {
       const storageRef = ref(storage, `images/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
+      await uploadBytes(storageRef, file, {
+        contentType: file.type,
+        cacheControl: "public, max-age=31536000, immutable",
+      });
       const url = await getDownloadURL(storageRef);
       setImages((prev) => [...prev, { name: file.name, url }]);
     } catch (err) {
@@ -158,9 +161,23 @@ export default function SchoolsPage() {
       }
     } catch (err) {
       console.error("画像削除エラー:", err);
-    } finally {
-      setImages((prev) => prev.filter((img) => img.url !== url));
     }
+
+    // DB からも即削除
+    if (contentId && currentUser) {
+      try {
+        const idToken = await currentUser.getIdToken();
+        await fetch(`${API_BASE_URL}/delete_image_url`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content_id: contentId, image_url: url, idToken }),
+        });
+      } catch (err) {
+        console.error("画像レコード削除エラー:", err);
+      }
+    }
+
+    setImages((prev) => prev.filter((img) => img.url !== url));
   };
 
   const handlePdfUpload = async (file: File) => {
@@ -177,7 +194,10 @@ export default function SchoolsPage() {
     try {
       setUploadingPdf(true);
       const storageRef = ref(storage, `pdfs/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
+      await uploadBytes(storageRef, file, {
+        contentType: "application/pdf",
+        cacheControl: "public, max-age=31536000, immutable",
+      });
       const url = await getDownloadURL(storageRef);
       setPdfUrls((prev) => uniqueUrls([...prev, url]));
       alert("PDFアップロード成功!");
@@ -210,9 +230,23 @@ export default function SchoolsPage() {
       }
     } catch (err) {
       console.error("PDF削除エラー:", err);
-    } finally {
-      setPdfUrls((prev) => prev.filter((u) => u !== url));
     }
+
+    // DB からも即削除
+    if (contentId && currentUser) {
+      try {
+        const idToken = await currentUser.getIdToken();
+        await fetch(`${API_BASE_URL}/delete_pdf_url`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content_id: contentId, pdf_url: url, idToken }),
+        });
+      } catch (err) {
+        console.error("PDFレコード削除エラー:", err);
+      }
+    }
+
+    setPdfUrls((prev) => prev.filter((u) => u !== url));
   };
 
   const enterEditMode = () => {
@@ -378,7 +412,7 @@ export default function SchoolsPage() {
                   <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {images.map((img) => (
                       <div key={img.url} className="flex items-center gap-2 p-2 border rounded bg-blue-50">
-                        <img src={img.url} alt={img.name} className="w-12 h-12 object-cover rounded" />
+                        <img src={img.url} alt={img.name} className="w-12 h-12 object-cover rounded" loading="lazy" decoding="async" />
                         <span className="flex-1 text-sm truncate">{img.name}</span>
                         <button
                           onClick={() => handleImageDelete(img.url)}
@@ -477,15 +511,17 @@ export default function SchoolsPage() {
                 )}
 
                 {images.length > 0 && (
-                  <div className="mt-6">
+                  <div className="mb-6">
                     <h4 className="text-blue-800 font-semibold mb-2">画像プレビュー</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="space-y-2">
                       {images.map((img) => (
                         <img
                           key={img.url}
                           src={img.url}
                           alt={img.name}
-                          className="w-full h-auto rounded border border-blue-200"
+                          className="w-full h-auto rounded border border-blue-200 block"
+                          loading="lazy"
+                          decoding="async"
                         />
                       ))}
                     </div>
@@ -526,6 +562,21 @@ export default function SchoolsPage() {
               </div>
             )}
 
+            {displayImageUrls.length > 0 && (
+              <div className="space-y-3">
+                {displayImageUrls.map((url, idx) => (
+                  <img
+                    key={url}
+                    src={url}
+                    alt={getFilenameFromUrl(url, `image_${idx + 1}`)}
+                    className="w-full h-auto rounded border border-blue-200 block"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ))}
+              </div>
+            )}
+
             <div className="border border-blue-200 p-6 rounded-lg bg-blue-50 prose max-w-none shadow-sm min-h-[260px]">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkBreaks]}
@@ -540,22 +591,6 @@ export default function SchoolsPage() {
                 {responseData.data.content}
               </ReactMarkdown>
             </div>
-
-            {displayImageUrls.length > 0 && (
-              <div>
-                <h4 className="text-blue-800 font-semibold mb-2">画像</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {displayImageUrls.map((url, idx) => (
-                    <img
-                      key={url}
-                      src={url}
-                      alt={getFilenameFromUrl(url, `image_${idx + 1}`)}
-                      className="w-full h-auto rounded border border-blue-200"
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>

@@ -1088,7 +1088,10 @@ const MarkdownImageUploader: React.FC = () => {
     const storageRef = ref(storage, `images/${Date.now()}_${file.name}`);
 
     try {
-      await uploadBytes(storageRef, file);
+      await uploadBytes(storageRef, file, {
+        contentType: file.type,
+        cacheControl: "public, max-age=31536000, immutable",
+      });
       const url = await getDownloadURL(storageRef);
       setImages((prev) => [...prev, { name: file.name, url }]);
     } catch (err) {
@@ -1141,7 +1144,10 @@ const MarkdownImageUploader: React.FC = () => {
     try {
       setUploadingPdf(true);
       const storageRef = ref(storage, `pdfs/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
+      await uploadBytes(storageRef, file, {
+        contentType: "application/pdf",
+        cacheControl: "public, max-age=31536000, immutable",
+      });
       const url = await getDownloadURL(storageRef);
       setPdfUrl(url);
       alert("PDFアップロード成功！");
