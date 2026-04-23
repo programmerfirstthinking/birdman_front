@@ -1204,17 +1204,13 @@ const MarkdownImageUploader: React.FC = () => {
     setSending(true);
 
     try {
-      const markdownContent = [
-        images.map((img) => `![${img.name}](${img.url})`).join("\n"),
-        markdown,
-      ].join("\n");
-
       const idToken = await user.getIdToken();
       const payload = {
         groupId,
         contentName,
-        content: markdownContent,
-        pdfUrl,
+        content: markdown,
+        imageUrls: images.map((img) => img.url),
+        pdfUrls: pdfUrl ? [pdfUrl] : [],
       };
 
       const response = await fetch(`${API_BASE_URL}/make_grouptopic`, {
@@ -1427,10 +1423,7 @@ const MarkdownImageUploader: React.FC = () => {
               },
             }}
           >
-            {[
-              images.map((img) => `![${img.name}](${img.url})`).join("\n"),
-              markdown,
-            ].join("\n")}
+            {markdown}
           </ReactMarkdown>
 
           {pdfUrl && (
