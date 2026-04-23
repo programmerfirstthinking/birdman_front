@@ -95,8 +95,8 @@ export default function SchoolsPage() {
       const idToken = await user.getIdToken();
       const res = await fetch(`${API_BASE_URL}/see_groupcontent`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: id, idToken }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ content: id }),
       });
       if (!res.ok) throw new Error("Fetch エラー");
 
@@ -169,8 +169,8 @@ export default function SchoolsPage() {
         const idToken = await currentUser.getIdToken();
         await fetch(`${API_BASE_URL}/delete_image_url`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content_id: contentId, image_url: url, idToken }),
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ content_id: contentId, image_url: url }),
         });
       } catch (err) {
         console.error("画像レコード削除エラー:", err);
@@ -238,8 +238,8 @@ export default function SchoolsPage() {
         const idToken = await currentUser.getIdToken();
         await fetch(`${API_BASE_URL}/delete_pdf_url`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content_id: contentId, pdf_url: url, idToken }),
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ content_id: contentId, pdf_url: url }),
         });
       } catch (err) {
         console.error("PDFレコード削除エラー:", err);
@@ -290,12 +290,11 @@ export default function SchoolsPage() {
         content: markdown,
         image_urls: uniqueUrls(images.map((img) => img.url)),
         pdf_urls: uniqueUrls(pdfUrls),
-        idToken,
       };
 
       const res = await fetch(`${API_BASE_URL}/editSchoolContent`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
         body: JSON.stringify(body),
       });
 

@@ -878,9 +878,8 @@ export default function LoginPage() {
         const res = await fetch(`${API_BASE_URL}/is_user_exist`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
           },
-          body: JSON.stringify({ idToken }),
         });
 
         if (res.status === 200) {
@@ -930,9 +929,11 @@ export default function LoginPage() {
       // const res = await fetch("http://localhost:8080/login", {
       const res = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
         body: JSON.stringify({
-          idToken,
           name,
           introduce: bio,
           schoolId, // 文字列で送信
