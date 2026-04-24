@@ -651,8 +651,8 @@ const fetcher = async (url: string) => {
 // ----------------------
 export default function Main() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
-  const [authChecked, setAuthChecked] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false); // Firebase が auth 状態を確定するまで false
   const [currentPage, setCurrentPage] = useState(() => {
     if (typeof window === "undefined") {
       return 1;
@@ -802,7 +802,16 @@ export default function Main() {
   const handlePrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
   const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
 
-  if (authChecked && !currentUser) {
+  // Firebase が auth 状態を確認するまでローディング表示（キャッシュ由来の誤表示を防ぐ）
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 p-6 flex items-center justify-center">
+        <p className="text-blue-700">読み込み中...</p>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 p-6 flex items-center justify-center">
         <div className="bg-white shadow-xl rounded-2xl p-8 flex flex-col items-center gap-4">
@@ -811,7 +820,7 @@ export default function Main() {
             onClick={() => router.push("/signup")}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
           >
-            signupページへ
+            ログインする
           </button>
         </div>
       </div>

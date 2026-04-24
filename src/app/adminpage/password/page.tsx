@@ -91,6 +91,7 @@ export default function PasswordManager() {
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // -----------------------------
   // 管理者チェック + パスワード取得
@@ -100,7 +101,6 @@ export default function PasswordManager() {
       const idToken = await user.getIdToken();
 
       // 管理者チェック
-      // const checkRes = await fetch("http://localhost:8080/admin/check", {
       const checkRes = await fetch(`${API_BASE_URL}/admin/check`, {
         method: "POST",
         headers: {
@@ -115,7 +115,6 @@ export default function PasswordManager() {
       }
 
       // 管理者ならパスワード取得
-      // const res = await fetch("http://localhost:8080/getPassword", {
       const res = await fetch(`${API_BASE_URL}/getPassword`, {
         headers: {
           "Authorization": "Bearer " + idToken
@@ -123,6 +122,7 @@ export default function PasswordManager() {
       });
       const data = await res.json();
       setPassword(data.user_enter_password);
+      setIsAdmin(true);
     } catch (err) {
       console.error("パスワード取得エラー:", err);
       alert("パスワード取得に失敗しました");
@@ -159,15 +159,22 @@ export default function PasswordManager() {
         body: JSON.stringify({ newPassword })
       });
 
-      const data = await res.json();
-      alert("パスワードを更新しました: " + data.user_enter_password);
-      setPassword(data.user_enter_password);
+      if (!res.ok) {
+        const errData = await res.json();
+        alert("パスワード更新に失敗しました: " + (errData.error || "エラー"));
+        return;
+      }
+      alert("パスワードを更新しました");
       setNewPassword("");
     } catch (err) {
       console.error("パスワード更新エラー:", err);
       alert("パスワード更新に失敗しました");
     }
   };
+
+  if (!isAdmin) {
+    return <div>管理者権限がありません</div>;
+  }
 
   return (
     <div>

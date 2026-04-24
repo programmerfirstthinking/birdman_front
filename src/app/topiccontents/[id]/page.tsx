@@ -9,6 +9,7 @@ import { API_BASE_URL } from "../../api/api";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 // const firebaseConfig = {
 //   apiKey: "AIzaSyCC3c0UgIJ9P9_BUXBLCw1GPPiHFwHvTrk",
@@ -138,7 +139,6 @@ export default function Page() {
         }
 
         const idToken = await user.getIdToken();
-        console.log("現在のユーザーのIDトークン:", idToken);
 
         const response = await fetch(
           `${API_BASE_URL}/topic_comment_only/${id}`,
@@ -220,16 +220,15 @@ export default function Page() {
       }
 
       const idToken = await user.getIdToken();
-      console.log("現在のユーザーのIDトークン:", idToken);
-
 
       // const response = await fetch("http://localhost:8080/topic_comment", {
       const response = await fetch(`${API_BASE_URL}/topic_comment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({ topicId:id, topic_comment:trimmedComment, token: idToken }),
+        body: JSON.stringify({ topicId: id, topic_comment: trimmedComment }),
       });
 
 
@@ -254,10 +253,21 @@ export default function Page() {
       return;
     }
 
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      alert("ログインが必要です");
+      return;
+    }
+    const idToken = await user.getIdToken();
+
     const response = await fetch(
       `${API_BASE_URL}/deleteTopicComment/${commentId}/${commentUserId}`,
       {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
       }
     );
 
@@ -641,12 +651,11 @@ return (
 
               const res = await fetch(`${API_BASE_URL}/edit_topic`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
                 body: JSON.stringify({
                   topicId: Number(id),
                   title: trimmedEditTitle,
                   content: trimmedEditContent,
-                  token: idToken,
                 }),
               });
 
@@ -694,11 +703,10 @@ return (
 
                       await fetch(`${API_BASE_URL}/edit_topic_comment`, {
                         method: "PUT",
-                        headers: { "Content-Type": "application/json" },
+                        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
                         body: JSON.stringify({
                           commentId: comment.ID,
                           content: editCommentContent,
-                          token: idToken,
                         }),
                       });
 
@@ -754,7 +762,14 @@ return (
 
                   {/* 右：メタ情報 */}
                   <div className="ml-auto text-right text-xs text-blue-600">
-                    <div>ユーザー: {getUserName(comment.UserID)}</div>
+                    <div>
+                      <Link
+                        href={`/user_profile/${comment.UserID}`}
+                        className="hover:underline hover:text-blue-800"
+                      >
+                        ユーザー: {getUserName(comment.UserID)}
+                      </Link>
+                    </div>
                     <div>学校: {getUserSchoolName(comment.UserID)}</div>
                     <div>
                       {new Date(comment.CreatedAt).toLocaleString()}
