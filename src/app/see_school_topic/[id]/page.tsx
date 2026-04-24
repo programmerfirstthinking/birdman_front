@@ -9,6 +9,7 @@ import remarkBreaks from "remark-breaks";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
 import { API_BASE_URL } from "../../api/api";
+import { CachedImage } from "../../../hooks/useCachedImage";
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const storage = getStorage(app);
@@ -411,7 +412,7 @@ export default function SchoolsPage() {
                   <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {images.map((img) => (
                       <div key={img.url} className="flex items-center gap-2 p-2 border rounded bg-blue-50">
-                        <img src={img.url} alt={img.name} className="w-12 h-12 object-cover rounded" loading="lazy" decoding="async" />
+                        <CachedImage src={img.url} alt={img.name} className="w-12 h-12 object-cover rounded" loading="lazy" decoding="async" />
                         <span className="flex-1 text-sm truncate">{img.name}</span>
                         <button
                           onClick={() => handleImageDelete(img.url)}
@@ -514,7 +515,7 @@ export default function SchoolsPage() {
                     <h4 className="text-blue-800 font-semibold mb-2">画像プレビュー</h4>
                     <div className="space-y-2">
                       {images.map((img) => (
-                        <img
+                        <CachedImage
                           key={img.url}
                           src={img.url}
                           alt={img.name}
@@ -564,7 +565,7 @@ export default function SchoolsPage() {
             {displayImageUrls.length > 0 && (
               <div className="space-y-3">
                 {displayImageUrls.map((url, idx) => (
-                  <img
+                  <CachedImage
                     key={url}
                     src={url}
                     alt={getFilenameFromUrl(url, `image_${idx + 1}`)}
