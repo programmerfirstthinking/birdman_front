@@ -1,3 +1,6 @@
+"use client";
+
+// import React, { useState, useEffect } from "react";
 import React, { useState, useEffect } from "react";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
@@ -21,7 +24,8 @@ const MarkdownImageUploader: React.FC = () => {
 
   type UploadedImage = {
     name: string;
-    url: string;
+    url: string;        // プレビュー用（クライアントのみ）
+    storageKey: string; // DB 保存用（プロバイダー非依存パス）
   };
 
   const [images, setImages] = useState<UploadedImage[]>([]);
@@ -29,7 +33,9 @@ const MarkdownImageUploader: React.FC = () => {
   const [sending, setSending] = useState<boolean>(false);
   const [groupId, setGroupId] = useState<number | null>(null);
   const [contentName, setContentName] = useState<string>("");
+  // PDF: プレビュー用 URL とバックエンド送信用キーを分けて管理
   const [pdfUrl, setPdfUrl] = useState<string>("");
+  const [pdfKey, setPdfKey] = useState<string>("");
   const [uploadingPdf, setUploadingPdf] = useState<boolean>(false);
 
   // URLから groupId を取得
@@ -54,8 +60,9 @@ const MarkdownImageUploader: React.FC = () => {
         contentType: file.type,
         cacheControl: "public, max-age=31536000, immutable",
       });
+      // storageKey にはパスのみを保存（URL はプレビュー用）
       const url = await getDownloadURL(storageRef);
-      setImages((prev) => [...prev, { name: file.name, url }]);
+      setImages((prev) => [...prev, { name: file.name, url, storageKey: storageRef.fullPath }]);
     } catch (err) {
       console.error("画像アップロードエラー:", err);
       alert("アップロードに失敗しました。");
@@ -64,10 +71,9 @@ const MarkdownImageUploader: React.FC = () => {
 
   const handleImageDelete = async (image: UploadedImage) => {
     try {
-      const path = decodeURIComponent(image.url.split("/o/")[1].split("?")[0]);
-      const storageRef = ref(storage, path);
-      await deleteObject(storageRef);
-      setImages((prev) => prev.filter((img) => img.url !== image.url));
+      // storageKey を使って直接 Firebase 参照を作成（URL パース不要）
+      await deleteObject(ref(storage, image.storageKey));
+      setImages((prev) => prev.filter((img) => img.storageKey !== image.storageKey));
     } catch (err) {
       console.error("画像削除エラー:", err);
       alert("画像の削除に失敗しました");
@@ -93,7 +99,7 @@ const MarkdownImageUploader: React.FC = () => {
       alert("PDFファイルのみアップロード可能です。");
       return;
     }
-    if (pdfUrl) {
+    if (pdfKey) {
       alert("すでにPDFがアップロードされています。削除してから再アップロードしてください。");
       return;
     }
@@ -112,6 +118,7 @@ const MarkdownImageUploader: React.FC = () => {
       });
       const url = await getDownloadURL(storageRef);
       setPdfUrl(url);
+      setPdfKey(storageRef.fullPath);
       alert("PDFアップロード成功！");
     } catch (err) {
       console.error(err);
@@ -122,12 +129,11 @@ const MarkdownImageUploader: React.FC = () => {
   };
 
   const handlePdfDelete = async () => {
-    if (!pdfUrl) return;
+    if (!pdfKey) return;
     try {
-      const path = decodeURIComponent(pdfUrl.split("/o/")[1].split("?")[0]);
-      const storageRef = ref(storage, path);
-      await deleteObject(storageRef);
+      await deleteObject(ref(storage, pdfKey));
       setPdfUrl("");
+      setPdfKey("");
       alert("PDFを削除しました");
     } catch (err) {
       console.error(err);
@@ -173,12 +179,14 @@ const MarkdownImageUploader: React.FC = () => {
 
     try {
       const idToken = await user.getIdToken();
+      // imageKeys / pdfKeys としてストレージパスのみを送信。
+      // バックエンドがプロバイダーに応じたフル URL を生成する。
       const payload = {
         groupId,
         contentName,
         content: markdown,
-        imageUrls: images.map((img) => img.url),
-        pdfUrls: pdfUrl ? [pdfUrl] : [],
+        imageKeys: images.map((img) => img.storageKey),
+        pdfKeys: pdfKey ? [pdfKey] : [],
       };
 
       const response = await fetch(`${API_BASE_URL}/make_grouptopic`, {
@@ -197,6 +205,7 @@ const MarkdownImageUploader: React.FC = () => {
       setMarkdown("");
       setContentName("");
       setPdfUrl("");
+      setPdfKey("");
       const schoolIdParam = searchParams.get("schoolId");
       const schoolId = schoolIdParam ? Number(schoolIdParam) : NaN;
       if (!Number.isNaN(schoolId)) {
@@ -264,7 +273,7 @@ const MarkdownImageUploader: React.FC = () => {
               <h3 className="text-blue-800 font-semibold mb-2">画像</h3>
               {images.map((img) => (
                 <div
-                  key={img.url}
+                  key={img.storageKey}
                   className="flex items-center gap-2 mb-2 border p-2 rounded bg-blue-50"
                 >
                   <img
@@ -302,7 +311,7 @@ const MarkdownImageUploader: React.FC = () => {
               />
             </label>
 
-            {pdfUrl && (
+            {pdfKey && (
               <div className="mt-3 flex justify-between items-center bg-blue-100 p-2 rounded">
                 <span className="text-sm text-blue-700">アップロード済み</span>
                 <button

@@ -21,9 +21,12 @@ type GroupContent = {
   group_id: number;
   group_contents_name: string;
   content: string;
-  pdf_url?: string;
-  pdf_urls?: string[];
+  // API が storage_key から生成したフル URL
   image_urls?: string[];
+  pdf_urls?: string[];
+  // storage_key（プロバイダー非依存パス）— 編集時の再送信に使う
+  image_keys?: string[];
+  pdf_keys?: string[];
   created_at: string;
   updated_at: string;
 };
@@ -35,38 +38,22 @@ type ApiResponse = {
   owner_name?: string;
 };
 
+// 画像: プレビュー用 URL + バックエンド送信用キー
 type UploadedImage = {
   name: string;
   url: string;
+  storageKey: string;
 };
 
-function getFilenameFromUrl(url: string, fallbackPrefix: string): string {
-  try {
-    if (url.includes("/o/")) {
-      const path = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
-      const name = path.split("/").pop();
-      return name || `${fallbackPrefix}_file`;
-    }
-    const withoutQuery = url.split("?")[0];
-    const name = withoutQuery.split("/").pop();
-    return name || `${fallbackPrefix}_file`;
-  } catch {
-    return `${fallbackPrefix}_file`;
-  }
-}
+// PDF: ダウンロード用 URL + バックエンド送信用キー
+type UploadedPdf = {
+  url: string;
+  key: string;
+};
 
-function uniqueUrls(urls: string[]): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const raw of urls) {
-    const u = raw.trim();
-    if (!u || seen.has(u)) {
-      continue;
-    }
-    seen.add(u);
-    result.push(u);
-  }
-  return result;
+// storage_key の末尾からファイル名を取り出す（プロバイダー非依存）
+function getFilenameFromKey(key: string, fallback: string): string {
+  return key.split("/").pop() || fallback;
 }
 
 export default function SchoolsPage() {
@@ -78,18 +65,15 @@ export default function SchoolsPage() {
   const [contentName, setContentName] = useState<string>("");
   const [markdown, setMarkdown] = useState<string>("");
   const [images, setImages] = useState<UploadedImage[]>([]);
-  const [pdfUrls, setPdfUrls] = useState<string[]>([]);
+  const [pdfs, setPdfs] = useState<UploadedPdf[]>([]);
   const [uploadingPdf, setUploadingPdf] = useState<boolean>(false);
 
   const auth = getAuth(app);
 
   const getServerImageUrls = (data: GroupContent): string[] => data.image_urls ?? [];
-  const getServerPdfUrls = (data: GroupContent): string[] => {
-    if (data.pdf_urls && data.pdf_urls.length > 0) {
-      return data.pdf_urls;
-    }
-    return data.pdf_url ? [data.pdf_url] : [];
-  };
+  const getServerPdfUrls = (data: GroupContent): string[] => data.pdf_urls ?? [];
+  const getServerImageKeys = (data: GroupContent): string[] => data.image_keys ?? [];
+  const getServerPdfKeys = (data: GroupContent): string[] => data.pdf_keys ?? [];
 
   const fetchData = async (id: number, user: User) => {
     try {
@@ -146,39 +130,35 @@ export default function SchoolsPage() {
         cacheControl: "public, max-age=31536000, immutable",
       });
       const url = await getDownloadURL(storageRef);
-      setImages((prev) => [...prev, { name: file.name, url }]);
+      setImages((prev) => [...prev, { name: file.name, url, storageKey: storageRef.fullPath }]);
     } catch (err) {
       console.error("画像アップロードエラー:", err);
       alert("画像アップロードに失敗しました");
     }
   };
 
-  const handleImageDelete = async (url: string) => {
+  // storageKey を受け取り、Firebase と API の両方から削除する
+  const handleImageDelete = async (storageKey: string) => {
     try {
-      if (url.includes("/o/")) {
-        const path = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
-        const storageRef = ref(storage, path);
-        await deleteObject(storageRef);
-      }
+      await deleteObject(ref(storage, storageKey));
     } catch (err) {
       console.error("画像削除エラー:", err);
     }
 
-    // DB からも即削除
     if (contentId && currentUser) {
       try {
         const idToken = await currentUser.getIdToken();
         await fetch(`${API_BASE_URL}/delete_image_url`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-          body: JSON.stringify({ content_id: contentId, image_url: url }),
+          body: JSON.stringify({ content_id: contentId, storage_key: storageKey }),
         });
       } catch (err) {
         console.error("画像レコード削除エラー:", err);
       }
     }
 
-    setImages((prev) => prev.filter((img) => img.url !== url));
+    setImages((prev) => prev.filter((img) => img.storageKey !== storageKey));
   };
 
   const handlePdfUpload = async (file: File) => {
@@ -200,7 +180,11 @@ export default function SchoolsPage() {
         cacheControl: "public, max-age=31536000, immutable",
       });
       const url = await getDownloadURL(storageRef);
-      setPdfUrls((prev) => uniqueUrls([...prev, url]));
+      setPdfs((prev) => {
+        const seen = new Set(prev.map((p) => p.key));
+        if (seen.has(storageRef.fullPath)) return prev;
+        return [...prev, { url, key: storageRef.fullPath }];
+      });
       alert("PDFアップロード成功!");
     } catch (err) {
       console.error(err);
@@ -222,32 +206,28 @@ export default function SchoolsPage() {
     await handlePdfUpload(e.dataTransfer.files[0]);
   };
 
-  const handlePdfDelete = async (url: string) => {
+  // storageKey を受け取り、Firebase と API の両方から削除する
+  const handlePdfDelete = async (key: string) => {
     try {
-      if (url.includes("/o/")) {
-        const path = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
-        const storageRef = ref(storage, path);
-        await deleteObject(storageRef);
-      }
+      await deleteObject(ref(storage, key));
     } catch (err) {
       console.error("PDF削除エラー:", err);
     }
 
-    // DB からも即削除
     if (contentId && currentUser) {
       try {
         const idToken = await currentUser.getIdToken();
         await fetch(`${API_BASE_URL}/delete_pdf_url`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-          body: JSON.stringify({ content_id: contentId, pdf_url: url }),
+          body: JSON.stringify({ content_id: contentId, storage_key: key }),
         });
       } catch (err) {
         console.error("PDFレコード削除エラー:", err);
       }
     }
 
-    setPdfUrls((prev) => prev.filter((u) => u !== url));
+    setPdfs((prev) => prev.filter((p) => p.key !== key));
   };
 
   const enterEditMode = () => {
@@ -255,14 +235,22 @@ export default function SchoolsPage() {
     setContentName(responseData.data.group_contents_name ?? "");
     setMarkdown(responseData.data.content ?? "");
 
-    const imageState = getServerImageUrls(responseData.data).map((url, idx) => ({
-      url,
-      name: getFilenameFromUrl(url, `image_${idx + 1}`),
-    }));
-    const pdfState = getServerPdfUrls(responseData.data);
+    // image_keys と image_urls を組み合わせて編集用ステートを構築
+    const imageUrls = getServerImageUrls(responseData.data);
+    const imageKeys = getServerImageKeys(responseData.data);
+    setImages(
+      imageKeys.map((key, i) => ({
+        name: getFilenameFromKey(key, `image_${i + 1}`),
+        url: imageUrls[i] ?? "",
+        storageKey: key,
+      }))
+    );
 
-    setImages(imageState);
-    setPdfUrls(pdfState);
+    // pdf_keys と pdf_urls を組み合わせて編集用ステートを構築
+    const pdfUrls = getServerPdfUrls(responseData.data);
+    const pdfKeys = getServerPdfKeys(responseData.data);
+    setPdfs(pdfKeys.map((key, i) => ({ url: pdfUrls[i] ?? "", key })));
+
     setIsEditing(true);
   };
 
@@ -271,13 +259,20 @@ export default function SchoolsPage() {
     if (!responseData) return;
     setContentName(responseData.data.group_contents_name ?? "");
     setMarkdown(responseData.data.content ?? "");
+
+    const imageUrls = getServerImageUrls(responseData.data);
+    const imageKeys = getServerImageKeys(responseData.data);
     setImages(
-      getServerImageUrls(responseData.data).map((url, idx) => ({
-        url,
-        name: getFilenameFromUrl(url, `image_${idx + 1}`),
-      })),
+      imageKeys.map((key, i) => ({
+        name: getFilenameFromKey(key, `image_${i + 1}`),
+        url: imageUrls[i] ?? "",
+        storageKey: key,
+      }))
     );
-    setPdfUrls(getServerPdfUrls(responseData.data));
+
+    const pdfUrls = getServerPdfUrls(responseData.data);
+    const pdfKeys = getServerPdfKeys(responseData.data);
+    setPdfs(pdfKeys.map((key, i) => ({ url: pdfUrls[i] ?? "", key })));
   };
 
   const handleSave = async () => {
@@ -289,8 +284,9 @@ export default function SchoolsPage() {
         id: contentId,
         group_contents_name: contentName,
         content: markdown,
-        image_urls: uniqueUrls(images.map((img) => img.url)),
-        pdf_urls: uniqueUrls(pdfUrls),
+        // storage_key のみ送信。バックエンドがプロバイダーに応じた URL を生成する。
+        image_keys: [...new Set(images.map((img) => img.storageKey))],
+        pdf_keys: [...new Set(pdfs.map((p) => p.key))],
       };
 
       const res = await fetch(`${API_BASE_URL}/editSchoolContent`, {
@@ -319,15 +315,14 @@ export default function SchoolsPage() {
     try {
       const idToken = await currentUser.getIdToken();
 
-      const allImageUrls = getServerImageUrls(responseData.data);
-      const allPdfUrls = getServerPdfUrls(responseData.data);
-
-      for (const url of [...allImageUrls, ...allPdfUrls]) {
+      // storage_key を使って Firebase Storage から削除（URL パース不要）
+      const allKeys = [
+        ...getServerImageKeys(responseData.data),
+        ...getServerPdfKeys(responseData.data),
+      ];
+      for (const key of allKeys) {
         try {
-          if (url.includes("/o/")) {
-            const path = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
-            await deleteObject(ref(storage, path));
-          }
+          await deleteObject(ref(storage, key));
         } catch (err) {
           console.error("ストレージ削除失敗:", err);
         }
@@ -353,6 +348,7 @@ export default function SchoolsPage() {
 
   const displayImageUrls = getServerImageUrls(responseData.data);
   const displayPdfUrls = getServerPdfUrls(responseData.data);
+  const displayPdfKeys = getServerPdfKeys(responseData.data);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 flex flex-col items-center font-sans">
@@ -421,11 +417,11 @@ export default function SchoolsPage() {
                 {images.length > 0 && (
                   <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {images.map((img) => (
-                      <div key={img.url} className="flex items-center gap-2 p-2 border rounded bg-blue-50">
+                      <div key={img.storageKey} className="flex items-center gap-2 p-2 border rounded bg-blue-50">
                         <CachedImage src={img.url} alt={img.name} className="w-12 h-12 object-cover rounded" loading="lazy" decoding="async" />
                         <span className="flex-1 text-sm truncate">{img.name}</span>
                         <button
-                          onClick={() => handleImageDelete(img.url)}
+                          onClick={() => handleImageDelete(img.storageKey)}
                           className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                         >
                           削除
@@ -460,20 +456,20 @@ export default function SchoolsPage() {
                   </label>
                 </div>
 
-                {pdfUrls.length > 0 && (
+                {pdfs.length > 0 && (
                   <div className="mt-3 space-y-2">
-                    {pdfUrls.map((url, idx) => (
-                      <div key={url} className="flex items-center justify-between gap-2 p-2 border rounded bg-blue-50">
+                    {pdfs.map((pdf) => (
+                      <div key={pdf.key} className="flex items-center justify-between gap-2 p-2 border rounded bg-blue-50">
                         <a
-                          href={url}
+                          href={pdf.url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-700 underline truncate"
                         >
-                          {getFilenameFromUrl(url, `pdf_${idx + 1}`)}
+                          {getFilenameFromKey(pdf.key, "PDFファイル")}
                         </a>
                         <button
-                          onClick={() => handlePdfDelete(url)}
+                          onClick={() => handlePdfDelete(pdf.key)}
                           className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                         >
                           削除
@@ -526,7 +522,7 @@ export default function SchoolsPage() {
                     <div className="space-y-2">
                       {images.map((img) => (
                         <CachedImage
-                          key={img.url}
+                          key={img.storageKey}
                           src={img.url}
                           alt={img.name}
                           className="w-full h-auto rounded border border-blue-200 block"
@@ -558,11 +554,11 @@ export default function SchoolsPage() {
             {displayPdfUrls.length > 0 && (
               <div className="space-y-2">
                 {displayPdfUrls.map((url, idx) => (
-                  <div key={url} className="flex items-center justify-between gap-4 p-4 border border-blue-300 bg-blue-50 rounded-lg shadow-sm">
+                  <div key={displayPdfKeys[idx] ?? url} className="flex items-center justify-between gap-4 p-4 border border-blue-300 bg-blue-50 rounded-lg shadow-sm">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-2xl">📄</span>
                       <span className="font-semibold text-blue-800 truncate">
-                        {getFilenameFromUrl(url, `pdf_${idx + 1}`)}
+                        {getFilenameFromKey(displayPdfKeys[idx] ?? "", `pdf_${idx + 1}`)}
                       </span>
                     </div>
                     <a
@@ -584,7 +580,7 @@ export default function SchoolsPage() {
                   <CachedImage
                     key={url}
                     src={url}
-                    alt={getFilenameFromUrl(url, `image_${idx + 1}`)}
+                    alt={`image_${idx + 1}`}
                     className="w-full h-auto rounded border border-blue-200 block"
                     loading="lazy"
                     decoding="async"
