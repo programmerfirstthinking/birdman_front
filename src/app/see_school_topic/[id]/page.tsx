@@ -357,8 +357,18 @@ export default function SchoolsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 flex flex-col items-center font-sans">
       <div className={`w-full bg-white rounded-2xl shadow-xl p-8 transition-all duration-300 ${isEditing ? "max-w-6xl" : "max-w-4xl"}`}>
-        <h2 className="flex items-center justify-between text-2xl font-bold text-blue-800 mb-6">
-          {isEditing ? "コンテンツを編集" : "スクールトピック詳細"}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <a
+              href="/schools"
+              className="text-blue-600 hover:text-blue-800 font-semibold"
+            >
+              ← ホーム
+            </a>
+            <h2 className="text-2xl font-bold text-blue-800">
+              {isEditing ? "コンテンツを編集" : "スクールトピック詳細"}
+            </h2>
+          </div>
           {responseData.current_user?.id === responseData.data.user_id && !isEditing && (
             <div>
               <button
@@ -375,7 +385,7 @@ export default function SchoolsPage() {
               </button>
             </div>
           )}
-        </h2>
+        </div>
 
         {isEditing ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -535,7 +545,13 @@ export default function SchoolsPage() {
             <div className="border-b-2 border-blue-200 pb-3">
               <h3 className="text-2xl font-bold text-blue-900">{responseData.data.group_contents_name}</h3>
               <p className="mt-2 text-sm text-blue-700">
-                作成者: {responseData.owner_name ?? `ID:${responseData.data.user_id}`}
+                作成者:{" "}
+                <a
+                  href={`/user_profile/${responseData.data.user_id}`}
+                  className="text-blue-600 hover:underline font-semibold"
+                >
+                  {responseData.owner_name ?? `ID:${responseData.data.user_id}`}
+                </a>
               </p>
             </div>
 
