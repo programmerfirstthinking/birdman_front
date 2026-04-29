@@ -1,7 +1,7 @@
 "use client";
 
 // import React, { useState, useEffect } from "react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
@@ -11,6 +11,8 @@ import remarkBreaks from "remark-breaks";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
 import { API_BASE_URL } from "../../api/api";
 import { useRouter, useSearchParams } from "next/navigation";
+import { prewarmImageCache, compressForUpload } from "../../../lib/mediaCache";
+import { MarkdownToolbar } from "../../../components/MarkdownToolbar";
 
 // 🔥 Firebase 初期化（重複を避ける）
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -30,6 +32,7 @@ const MarkdownImageUploader: React.FC = () => {
 
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [markdown, setMarkdown] = useState<string>("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [sending, setSending] = useState<boolean>(false);
   const [groupId, setGroupId] = useState<number | null>(null);
   const [contentName, setContentName] = useState<string>("");
@@ -37,6 +40,7 @@ const MarkdownImageUploader: React.FC = () => {
   const [pdfUrl, setPdfUrl] = useState<string>("");
   const [pdfKey, setPdfKey] = useState<string>("");
   const [uploadingPdf, setUploadingPdf] = useState<boolean>(false);
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
 
   // URLから groupId を取得
   useEffect(() => {
@@ -47,25 +51,30 @@ const MarkdownImageUploader: React.FC = () => {
   }, []);
 
   const handleImageUpload = async (file: File) => {
-    const MAX_SIZE = 1024 * 1024;
+    const MAX_SIZE = 5 * 1024 * 1024; // 圧縮前の元ファイルは5MBまで許容
     if (file.size > MAX_SIZE) {
-      alert("画像は1MB以下にしてください。");
+      alert("画像は5MB以下にしてください。");
       return;
     }
 
     const storageRef = ref(storage, `images/${Date.now()}_${file.name}`);
 
     try {
-      await uploadBytes(storageRef, file, {
-        contentType: file.type,
+      setUploadingImage(true);
+      // Firebase 送信前に WebP 圧縮してデータ量を削減
+      const compressed = await compressForUpload(file);
+      await uploadBytes(storageRef, compressed, {
+        contentType: "image/webp",
         cacheControl: "public, max-age=31536000, immutable",
       });
-      // storageKey にはパスのみを保存（URL はプレビュー用）
-      const url = await getDownloadURL(storageRef);
-      setImages((prev) => [...prev, { name: file.name, url, storageKey: storageRef.fullPath }]);
+      // 同じ圧縮済み blob でキャッシュをプレウォーム（getDownloadURL 不要）
+      const previewUrl = await prewarmImageCache(storageRef.fullPath, compressed);
+      setImages((prev) => [...prev, { name: file.name, url: previewUrl, storageKey: storageRef.fullPath }]);
     } catch (err) {
       console.error("画像アップロードエラー:", err);
       alert("アップロードに失敗しました。");
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -81,6 +90,7 @@ const MarkdownImageUploader: React.FC = () => {
   };
 
   const handleDrop = async (e: React.DragEvent<HTMLTextAreaElement>) => {
+    if (sending) return;
     e.preventDefault();
     e.stopPropagation();
     if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
@@ -142,6 +152,7 @@ const MarkdownImageUploader: React.FC = () => {
   };
 
   const handlePdfDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    if (sending) return;
     e.preventDefault();
     e.stopPropagation();
     if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
@@ -223,6 +234,13 @@ const MarkdownImageUploader: React.FC = () => {
 
   return (
   <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 flex flex-col items-center font-sans">
+    {sending && (
+      <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl px-8 py-6 shadow-2xl text-blue-800 font-semibold text-lg">
+          送信中...
+        </div>
+      </div>
+    )}
     <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl p-6">
 
       <h2 className="text-2xl font-bold text-blue-800 text-center mb-6">
@@ -237,34 +255,59 @@ const MarkdownImageUploader: React.FC = () => {
         ========================= */}
         <div className="flex flex-col">
 
-          <input
-            type="text"
-            placeholder="コンテンツ名"
-            value={contentName}
-            onChange={(e) => setContentName(e.target.value)}
-            className="w-full mb-4 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="コンテンツ名"
+              value={contentName}
+              onChange={(e) => setContentName(e.target.value.slice(0, 50))}
+              disabled={sending}
+              maxLength={50}
+              className="w-full p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
+            />
+            <div className="text-right mt-1">
+              <span className={`text-xs ${contentName.length >= 50 ? "text-red-500 font-semibold" : contentName.length >= 40 ? "text-yellow-500" : "text-gray-400"}`}>
+                {contentName.length}/50
+              </span>
+            </div>
+          </div>
 
-          <textarea
-            value={markdown}
-            onChange={(e) => setMarkdown(e.target.value)}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            placeholder="ここに記事を書いてください"
-            className="w-full h-64 p-3 mb-4 border border-blue-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+          <div className="mb-4">
+            <MarkdownToolbar
+              textareaRef={textareaRef}
+              value={markdown}
+              onChange={(v) => setMarkdown(v.slice(0, 5000))}
+              disabled={sending}
+            />
+            <textarea
+              ref={textareaRef}
+              value={markdown}
+              onChange={(e) => setMarkdown(e.target.value.slice(0, 5000))}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              placeholder="ここに記事を書いてください"
+              disabled={sending}
+              maxLength={5000}
+              className="w-full h-64 p-3 border border-blue-300 border-t-0 rounded-b-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
+            />
+            <div className="text-right mt-1">
+              <span className={`text-xs ${markdown.length >= 5000 ? "text-red-500 font-semibold" : markdown.length >= 4500 ? "text-yellow-500" : "text-gray-400"}`}>
+                {markdown.length}/5000
+              </span>
+            </div>
+          </div>
 
           {/* 送信ボタン */}
           <button
             onClick={handleSend}
-            disabled={sending || !groupId || !contentName.trim()}
+            disabled={sending || uploadingImage || uploadingPdf || !groupId || !contentName.trim() || !markdown.trim() || contentName.length > 50 || markdown.length > 5000}
             className={`mb-6 px-6 py-3 rounded-lg text-white font-semibold transition ${
-              sending || !groupId || !contentName.trim()
+              sending || uploadingImage || uploadingPdf || !groupId || !contentName.trim() || !markdown.trim() || contentName.length > 50 || markdown.length > 5000
                 ? "bg-blue-300 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
-            {sending ? "送信中..." : "送信"}
+            {sending ? "送信中..." : uploadingImage ? "画像アップロード中..." : uploadingPdf ? "PDFアップロード中..." : "送信"}
           </button>
 
           {/* 画像プレビュー */}
@@ -284,7 +327,8 @@ const MarkdownImageUploader: React.FC = () => {
                   <span className="flex-1 text-sm">{img.name}</span>
                   <button
                     onClick={() => handleImageDelete(img)}
-                    className="px-2 py-1 bg-red-500 text-white rounded text-sm"
+                    disabled={sending}
+                    className="px-2 py-1 bg-red-500 text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     削除
                   </button>
@@ -308,6 +352,7 @@ const MarkdownImageUploader: React.FC = () => {
                 accept="application/pdf"
                 style={{ display: "none" }}
                 onChange={handlePdfSelect}
+                disabled={sending}
               />
             </label>
 
@@ -316,7 +361,8 @@ const MarkdownImageUploader: React.FC = () => {
                 <span className="text-sm text-blue-700">アップロード済み</span>
                 <button
                   onClick={handlePdfDelete}
-                  className="px-2 py-1 bg-red-500 text-white rounded text-sm"
+                  disabled={sending}
+                  className="px-2 py-1 bg-red-500 text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   削除
                 </button>
@@ -334,74 +380,36 @@ const MarkdownImageUploader: React.FC = () => {
             プレビュー
           </h3>
 
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkBreaks]}
-            components={{
-              br: ({ node, ...props }) => (
-                <br
-                  {...props}
-                  style={{
-                    display: "block",
-                    marginBottom: "0.9em",
-                    lineHeight: 1.8,
-                  }}
-                />
-              ),
-              p: ({ node, ...props }) => (
-                <p
-                  {...props}
-                  style={{
-                    margin: "0 0 1.1rem 0",
-                    lineHeight: 1.8,
-                  }}
-                />
-              ),
-              img: ({ node, ...props }) => (
-                <img
-                  {...props}
-                  style={{
-                    maxWidth: "100%",
-                    margin: "8px 0",
-                    borderRadius: "6px",
-                    border: "1px solid #cbd5e1",
-                  }}
-                />
-              ),
-              a: ({ node, ...props }) => {
-                const href = props.href || "";
-
-                if (href.endsWith(".pdf")) {
-                  return (
-                    <div className="flex items-center gap-2 p-3 mb-3 border border-blue-200 rounded-lg bg-blue-100">
-                      <span className="text-2xl">📄</span>
-                      <span className="flex-1 text-blue-700">
-                        {props.children}
-                      </span>
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-2 py-1 bg-blue-600 text-white rounded text-sm"
-                      >
-                        PDF
-                      </a>
-                    </div>
-                  );
-                }
-
-                return (
-                  <a
-                    {...props}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  />
-                );
-              },
-            }}
-          >
-            {markdown}
-          </ReactMarkdown>
+          <div className="prose max-w-none prose-headings:text-blue-900 prose-a:text-blue-600 prose-code:before:content-none prose-code:after:content-none">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkBreaks]}
+              components={{
+                p: ({ node, ...props }) => (
+                  <p {...props} style={{ margin: "0 0 1.1rem 0", lineHeight: 1.8 }} />
+                ),
+                a: ({ node, ...props }) => {
+                  const href = props.href || "";
+                  if (href.endsWith(".pdf")) {
+                    return (
+                      <div className="not-prose flex items-center gap-2 p-3 mb-3 border border-blue-200 rounded-lg bg-blue-100">
+                        <span className="text-2xl">📄</span>
+                        <span className="flex-1 text-blue-700">{props.children}</span>
+                        <a href={href} target="_blank" rel="noopener noreferrer" className="px-2 py-1 bg-blue-600 text-white rounded text-sm">
+                          PDF
+                        </a>
+                      </div>
+                    );
+                  }
+                  return <a {...props} target="_blank" rel="noopener noreferrer" />;
+                },
+                img: ({ node, ...props }) => (
+                  <img {...props} style={{ maxWidth: "100%", margin: "8px 0", borderRadius: "6px", border: "1px solid #cbd5e1" }} />
+                ),
+              }}
+            >
+              {markdown}
+            </ReactMarkdown>
+          </div>
 
           {pdfUrl && (
             <div className="mt-4 flex items-center gap-2 p-3 border border-blue-200 rounded-lg bg-blue-100">

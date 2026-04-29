@@ -161,6 +161,10 @@ export default function Page() {
         alert("コメント内容を入力してください");
         return;
       }
+      if (trimmedComment.length > 1000) {
+        alert("コメントは1000文字以内で入力してください");
+        return;
+      }
 
       // const params = useParams();
       // const id = params.id;
@@ -398,13 +402,23 @@ return (
               <>
                 <textarea
                   value={editCommentContent}
-                  onChange={(e) => setEditCommentContent(e.target.value)}
-                  className="w-full p-2 border rounded-lg mb-2"
+                  onChange={(e) => setEditCommentContent(e.target.value.slice(0, 1000))}
+                  maxLength={1000}
+                  className="w-full p-2 border rounded-lg mb-1"
                 />
+                <div className="text-right mb-2">
+                  <span className={`text-xs ${editCommentContent.length >= 1000 ? "text-red-500 font-semibold" : editCommentContent.length >= 900 ? "text-yellow-500" : "text-gray-400"}`}>
+                    {editCommentContent.length}/1000
+                  </span>
+                </div>
 
                 <div className="flex gap-2">
                   <button
                     onClick={async () => {
+                      const trimmed = editCommentContent.trim();
+                      if (!trimmed) { alert("コメントを入力してください"); return; }
+                      if (trimmed.length > 1000) { alert("コメントは1000文字以内で入力してください"); return; }
+
                       const auth = getAuth();
                       const user = auth.currentUser;
                       if (!user) return;
@@ -416,14 +430,15 @@ return (
                         headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
                         body: JSON.stringify({
                           commentId: comment.ID,
-                          content: editCommentContent,
+                          content: trimmed,
                         }),
                       });
 
                       setEditingCommentId(null);
                       GetTopicdata(id);
                     }}
-                    className="px-3 py-1 bg-blue-600 text-white rounded-lg"
+                    disabled={editCommentContent.trim().length === 0 || editCommentContent.length > 1000}
+                    className="px-3 py-1 bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     保存
                   </button>
@@ -501,15 +516,26 @@ return (
         }}
         className="flex flex-col gap-2"
       >
-        <input
-          type="text"
-          value={topic_comment}
-          onChange={(e) => setTopicComment(e.target.value)}
-          placeholder="コメント内容"
-          className="p-2 border rounded-lg"
-        />
+        <div>
+          <textarea
+            value={topic_comment}
+            onChange={(e) => setTopicComment(e.target.value.slice(0, 1000))}
+            placeholder="コメント内容"
+            maxLength={1000}
+            className="p-2 border rounded-lg w-full h-20 resize-none"
+          />
+          <div className="text-right mt-1">
+            <span className={`text-xs ${topic_comment.length >= 1000 ? "text-red-500 font-semibold" : topic_comment.length >= 900 ? "text-yellow-500" : "text-gray-400"}`}>
+              {topic_comment.length}/1000
+            </span>
+          </div>
+        </div>
 
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg w-32">
+        <button
+          type="submit"
+          disabled={topic_comment.trim().length === 0 || topic_comment.length > 1000}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg w-32 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           投稿
         </button>
       </form>

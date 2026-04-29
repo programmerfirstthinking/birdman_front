@@ -24,11 +24,25 @@ const auth = getAuth(app);
 // 型定義
 // ----------------------
 type School = {
-  ID: number;
-  SchoolName: string;
-  CreatedAt: string | null;
-  UpdatedAt: string | null;
+  id: number;
+  school_name: string;
+  latest_content_at?: string | null;
 };
+
+function formatLatestAt(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "たった今";
+  if (diffMin < 60) return `${diffMin}分前`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `${diffH}時間前`;
+  const diffD = Math.floor(diffH / 24);
+  if (diffD < 30) return `${diffD}日前`;
+  return d.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" });
+}
 
 type Topic = {
   ID: number;
@@ -100,7 +114,7 @@ export default function Main() {
 
   // ✅ 学校一覧（キャッシュされる）
   const { data: schoolData, isLoading: loadingSchools } = useSWR(
-    `${API_BASE_URL}/getSchools`,
+    `${API_BASE_URL}/schools-with-groups`,
     fetcher
   );
   const schools: School[] = schoolData?.schools ?? [];
@@ -122,8 +136,8 @@ export default function Main() {
   const [showSchoolMenu, setShowSchoolMenu] = useState(false);
   const [showRightMenu, setShowRightMenu] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const MAX_TOPIC_NAME_LENGTH = 100;
-  const MAX_TOPIC_CONTENT_LENGTH = 5000;
+  const MAX_TOPIC_NAME_LENGTH = 50;
+  const MAX_TOPIC_CONTENT_LENGTH = 2000;
 
   // ----------------------
   // ページネーション
@@ -299,13 +313,18 @@ export default function Main() {
               <div className="flex flex-col gap-3">
                 {schools.map(school => (
                   <button
-                    key={school.ID}
-                    onClick={() => road_to_school(school.ID)}
+                    key={school.id}
+                    onClick={() => road_to_school(school.id)}
                     className="bg-white shadow-md hover:shadow-lg rounded-xl p-3 text-left text-blue-800 border border-blue-200 hover:bg-blue-50"
                   >
                     <div className="text-xl font-semibold">
-                      {school.SchoolName}
+                      {school.school_name}
                     </div>
+                    {school.latest_content_at && (
+                      <div className="text-xs text-blue-400 mt-1">
+                        {formatLatestAt(school.latest_content_at)}
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
@@ -332,12 +351,12 @@ export default function Main() {
             <div className="flex flex-col gap-3">
               {schools.map(school => (
                 <button
-                  key={school.ID}
-                  onClick={() => road_to_school(school.ID)}
+                  key={school.id}
+                  onClick={() => road_to_school(school.id)}
                   className="bg-white shadow-md hover:shadow-lg rounded-xl p-3 text-left text-blue-800 border border-blue-200 hover:bg-blue-50"
                 >
                   <div className="text-xl font-semibold">
-                    {school.SchoolName}
+                    {school.school_name}
                   </div>
                   {/* <div className="text-sm text-blue-400 mt-1">
                     作成日:
@@ -369,26 +388,42 @@ export default function Main() {
                     sendinfo();
                   }}
                 >
-                  <input
-                    type="text"
-                    placeholder="トピック名"
-                    value={topicName}
-                    onChange={e => setTopicName(e.target.value)}
-                    className="border rounded-lg p-3"
-                  />
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="トピック名"
+                      value={topicName}
+                      onChange={e => setTopicName(e.target.value.slice(0, MAX_TOPIC_NAME_LENGTH))}
+                      maxLength={MAX_TOPIC_NAME_LENGTH}
+                      className="border rounded-lg p-3 w-full"
+                    />
+                    <div className="text-right mt-1">
+                      <span className={`text-xs ${topicName.length >= MAX_TOPIC_NAME_LENGTH ? "text-red-500 font-semibold" : topicName.length >= 40 ? "text-yellow-500" : "text-gray-400"}`}>
+                        {topicName.length}/{MAX_TOPIC_NAME_LENGTH}
+                      </span>
+                    </div>
+                  </div>
 
-                  <textarea
-                    placeholder="内容"
-                    value={topicContent}
-                    onChange={e => setTopicContent(e.target.value)}
-                    className="border rounded-lg p-3 h-28"
-                  />
+                  <div>
+                    <textarea
+                      placeholder="内容"
+                      value={topicContent}
+                      onChange={e => setTopicContent(e.target.value.slice(0, MAX_TOPIC_CONTENT_LENGTH))}
+                      maxLength={MAX_TOPIC_CONTENT_LENGTH}
+                      className="border rounded-lg p-3 h-28 w-full"
+                    />
+                    <div className="text-right mt-1">
+                      <span className={`text-xs ${topicContent.length >= MAX_TOPIC_CONTENT_LENGTH ? "text-red-500 font-semibold" : topicContent.length >= 1800 ? "text-yellow-500" : "text-gray-400"}`}>
+                        {topicContent.length}/{MAX_TOPIC_CONTENT_LENGTH}
+                      </span>
+                    </div>
+                  </div>
 
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !topicName.trim() || !topicContent.trim() || topicName.length > MAX_TOPIC_NAME_LENGTH || topicContent.length > MAX_TOPIC_CONTENT_LENGTH}
                     className={`py-3 rounded-lg text-white ${
-                      isSubmitting
+                      isSubmitting || !topicName.trim() || !topicContent.trim() || topicName.length > MAX_TOPIC_NAME_LENGTH || topicContent.length > MAX_TOPIC_CONTENT_LENGTH
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-indigo-500 hover:bg-indigo-600"
                     }`}

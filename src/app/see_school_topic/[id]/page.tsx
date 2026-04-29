@@ -9,7 +9,8 @@ import remarkBreaks from "remark-breaks";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
 import { API_BASE_URL } from "../../api/api";
-import { CachedImage } from "../../../hooks/useCachedImage";
+import { CachedImage, CachedPdfAnchor } from "../../../hooks/useCachedImage";
+import { compressForUpload, prewarmImageCache } from "../../../lib/mediaCache";
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const storage = getStorage(app);
@@ -67,6 +68,8 @@ export default function SchoolsPage() {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [pdfs, setPdfs] = useState<UploadedPdf[]>([]);
   const [uploadingPdf, setUploadingPdf] = useState<boolean>(false);
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
 
   const auth = getAuth(app);
 
@@ -112,28 +115,35 @@ export default function SchoolsPage() {
   }, [currentUser]);
 
   const handleImageDrop = async (e: React.DragEvent<HTMLTextAreaElement>) => {
+    if (saving) return;
     e.preventDefault();
     e.stopPropagation();
     if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
 
     const file = e.dataTransfer.files[0];
-    const MAX_SIZE = 1024 * 1024;
+    const MAX_SIZE = 5 * 1024 * 1024; // 圧縮前の元ファイルは5MBまで許容
     if (file.size > MAX_SIZE) {
-      alert("画像は1MB以下にしてください。");
+      alert("画像は5MB以下にしてください。");
       return;
     }
 
     try {
+      setUploadingImage(true);
       const storageRef = ref(storage, `images/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file, {
-        contentType: file.type,
+      // Firebase 送信前に WebP 圧縮してデータ量を削減
+      const compressed = await compressForUpload(file);
+      await uploadBytes(storageRef, compressed, {
+        contentType: "image/webp",
         cacheControl: "public, max-age=31536000, immutable",
       });
-      const url = await getDownloadURL(storageRef);
-      setImages((prev) => [...prev, { name: file.name, url, storageKey: storageRef.fullPath }]);
+      // 同じ圧縮済み blob でキャッシュをプレウォーム（getDownloadURL 不要）
+      const previewUrl = await prewarmImageCache(storageRef.fullPath, compressed);
+      setImages((prev) => [...prev, { name: file.name, url: previewUrl, storageKey: storageRef.fullPath }]);
     } catch (err) {
       console.error("画像アップロードエラー:", err);
       alert("画像アップロードに失敗しました");
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -200,6 +210,7 @@ export default function SchoolsPage() {
   };
 
   const handlePdfDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    if (saving) return;
     e.preventDefault();
     e.stopPropagation();
     if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
@@ -277,6 +288,7 @@ export default function SchoolsPage() {
 
   const handleSave = async () => {
     if (!contentId || !currentUser) return;
+    setSaving(true);
 
     try {
       const idToken = await currentUser.getIdToken();
@@ -305,6 +317,8 @@ export default function SchoolsPage() {
     } catch (err) {
       console.error(err);
       alert("更新に失敗しました");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -347,11 +361,19 @@ export default function SchoolsPage() {
   }
 
   const displayImageUrls = getServerImageUrls(responseData.data);
+  const displayImageKeys = getServerImageKeys(responseData.data);
   const displayPdfUrls = getServerPdfUrls(responseData.data);
   const displayPdfKeys = getServerPdfKeys(responseData.data);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 flex flex-col items-center font-sans">
+      {saving && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl px-8 py-6 shadow-2xl text-blue-800 font-semibold text-lg">
+            保存中...
+          </div>
+        </div>
+      )}
       <div className={`w-full bg-white rounded-2xl shadow-xl p-8 transition-all duration-300 ${isEditing ? "max-w-6xl" : "max-w-4xl"}`}>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
@@ -391,38 +413,53 @@ export default function SchoolsPage() {
                 <input
                   type="text"
                   value={contentName}
-                  onChange={(e) => setContentName(e.target.value)}
-                  className="w-full p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  onChange={(e) => setContentName(e.target.value.slice(0, 50))}
+                  disabled={saving}
+                  maxLength={50}
+                  className="w-full p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
                   placeholder="コンテンツ名"
                 />
+                <div className="text-right mt-1">
+                  <span className={`text-xs ${contentName.length >= 50 ? "text-red-500 font-semibold" : contentName.length >= 40 ? "text-yellow-500" : "text-gray-400"}`}>
+                    {contentName.length}/50
+                  </span>
+                </div>
               </div>
 
               <div className="flex-1 flex flex-col">
                 <h3 className="text-blue-700 font-semibold mb-2">本文 (Markdown)</h3>
                 <textarea
                   value={markdown}
-                  onChange={(e) => setMarkdown(e.target.value)}
+                  onChange={(e) => setMarkdown(e.target.value.slice(0, 5000))}
                   onDrop={handleImageDrop}
                   onDragOver={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                   }}
                   placeholder="ここにテキストを書いてください"
-                  className="w-full flex-1 min-h-[300px] p-3 border border-blue-300 rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  disabled={saving}
+                  maxLength={5000}
+                  className="w-full flex-1 min-h-[300px] p-3 border border-blue-300 rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
                 />
+                <div className="text-right mt-1">
+                  <span className={`text-xs ${markdown.length >= 5000 ? "text-red-500 font-semibold" : markdown.length >= 4500 ? "text-yellow-500" : "text-gray-400"}`}>
+                    {markdown.length}/5000
+                  </span>
+                </div>
               </div>
 
               <div>
-                <h3 className="text-blue-800 font-semibold mb-2">画像 (本文とは別保存)</h3>
+                <h3 className="text-blue-800 font-semibold mb-2">画像</h3>
                 {images.length > 0 && (
                   <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {images.map((img) => (
                       <div key={img.storageKey} className="flex items-center gap-2 p-2 border rounded bg-blue-50">
-                        <CachedImage src={img.url} alt={img.name} className="w-12 h-12 object-cover rounded" loading="lazy" decoding="async" />
+                        <CachedImage src={img.url} storageKey={img.storageKey} alt={img.name} className="w-12 h-12 object-cover rounded" loading="lazy" decoding="async" />
                         <span className="flex-1 text-sm truncate">{img.name}</span>
                         <button
                           onClick={() => handleImageDelete(img.storageKey)}
-                          className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
+                          disabled={saving}
+                          className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           削除
                         </button>
@@ -430,11 +467,11 @@ export default function SchoolsPage() {
                     ))}
                   </div>
                 )}
-                <p className="text-xs text-blue-700">本文欄に画像をドラッグ＆ドロップすると、画像は別テーブル保存されます。</p>
+                <p className="text-xs text-blue-700">画像を表示します</p>
               </div>
 
               <div>
-                <h3 className="text-blue-800 font-semibold mb-2">PDF添付 (本文とは別保存)</h3>
+                <h3 className="text-blue-800 font-semibold mb-2">PDF添付</h3>
                 <div
                   onDrop={handlePdfDrop}
                   onDragOver={(e) => {
@@ -451,7 +488,7 @@ export default function SchoolsPage() {
                       accept="application/pdf"
                       style={{ display: "none" }}
                       onChange={handlePdfSelect}
-                      disabled={uploadingPdf}
+                      disabled={uploadingPdf || saving}
                     />
                   </label>
                 </div>
@@ -470,7 +507,8 @@ export default function SchoolsPage() {
                         </a>
                         <button
                           onClick={() => handlePdfDelete(pdf.key)}
-                          className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
+                          disabled={saving}
+                          className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           削除
                         </button>
@@ -483,13 +521,15 @@ export default function SchoolsPage() {
               <div className="flex gap-4 pt-4">
                 <button
                   onClick={handleSave}
-                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow transition"
+                  disabled={saving || uploadingImage || uploadingPdf || contentName.length > 50 || markdown.length > 5000}
+                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  更新を保存
+                  {saving ? "保存中..." : uploadingImage ? "画像アップロード中..." : uploadingPdf ? "PDFアップロード中..." : "更新を保存"}
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  className="flex-1 py-3 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold rounded-lg shadow transition"
+                  disabled={saving}
+                  className="flex-1 py-3 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold rounded-lg shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   キャンセル
                 </button>
@@ -498,32 +538,32 @@ export default function SchoolsPage() {
 
             <div className="flex flex-col h-full max-h-[800px]">
               <h3 className="text-blue-800 font-semibold mb-2">プレビュー</h3>
-              <div className="flex-1 border border-blue-200 p-6 rounded-lg bg-blue-50 overflow-y-auto prose max-w-none shadow-inner">
+              <div className="flex-1 border border-blue-200 p-6 rounded-lg bg-blue-50 overflow-y-auto prose max-w-none prose-headings:text-blue-900 prose-a:text-blue-600 prose-code:before:content-none prose-code:after:content-none shadow-inner">
                 {markdown ? (
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}
                     components={{
                       p: ({ node, ...props }) => <p {...props} style={{ marginBottom: "1.1rem", lineHeight: 1.8 }} />,
-                      br: ({ node, ...props }) => <br {...props} style={{ display: "block", marginBottom: "0.9em", lineHeight: 1.8 }} />,
                       a: ({ node, ...props }) => (
-                        <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" />
+                        <a {...props} target="_blank" rel="noopener noreferrer" />
                       ),
                     }}
                   >
                     {markdown}
                   </ReactMarkdown>
                 ) : (
-                  <p className="text-gray-400 text-sm">プレビューがここに表示されます...</p>
+                  <p className="not-prose text-gray-400 text-sm">プレビューがここに表示されます...</p>
                 )}
 
                 {images.length > 0 && (
-                  <div className="mb-6">
+                  <div className="not-prose mb-6">
                     <h4 className="text-blue-800 font-semibold mb-2">画像プレビュー</h4>
                     <div className="space-y-2">
                       {images.map((img) => (
                         <CachedImage
                           key={img.storageKey}
                           src={img.url}
+                          storageKey={img.storageKey}
                           alt={img.name}
                           className="w-full h-auto rounded border border-blue-200 block"
                           loading="lazy"
@@ -561,14 +601,13 @@ export default function SchoolsPage() {
                         {getFilenameFromKey(displayPdfKeys[idx] ?? "", `pdf_${idx + 1}`)}
                       </span>
                     </div>
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <CachedPdfAnchor
+                      storageKey={displayPdfKeys[idx] ?? url}
+                      url={url}
                       className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow transition"
                     >
                       ダウンロード
-                    </a>
+                    </CachedPdfAnchor>
                   </div>
                 ))}
               </div>
@@ -580,6 +619,7 @@ export default function SchoolsPage() {
                   <CachedImage
                     key={url}
                     src={url}
+                    storageKey={displayImageKeys[idx]}
                     alt={`image_${idx + 1}`}
                     className="w-full h-auto rounded border border-blue-200 block"
                     loading="lazy"
@@ -589,14 +629,13 @@ export default function SchoolsPage() {
               </div>
             )}
 
-            <div className="border border-blue-200 p-6 rounded-lg bg-blue-50 prose max-w-none shadow-sm min-h-[260px]">
+            <div className="border border-blue-200 p-6 rounded-lg bg-blue-50 prose max-w-none prose-headings:text-blue-900 prose-a:text-blue-600 prose-code:before:content-none prose-code:after:content-none shadow-sm min-h-[260px]">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
                   p: ({ node, ...props }) => <p {...props} style={{ marginBottom: "1.1rem", lineHeight: 1.8 }} />,
-                  br: ({ node, ...props }) => <br {...props} style={{ display: "block", marginBottom: "0.9em", lineHeight: 1.8 }} />,
                   a: ({ node, ...props }) => (
-                    <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-semibold" />
+                    <a {...props} target="_blank" rel="noopener noreferrer" />
                   ),
                 }}
               >
