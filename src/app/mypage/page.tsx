@@ -33,6 +33,7 @@ type User = {
   id: number;
   name: string;
   school_id: number;
+  school_name?: string;
   introduce?: string;
   uuid: string;
   created_at: string;
@@ -66,6 +67,7 @@ export default function ProfilePage() {
           id: dataFromBackend.ID,
           name: dataFromBackend.Name,
           school_id: dataFromBackend.SchoolID,
+          school_name: dataFromBackend.SchoolName,
           introduce: dataFromBackend.Introduce,
           uuid: dataFromBackend.Uuid,
           created_at: dataFromBackend.CreatedAt,
@@ -185,6 +187,9 @@ export default function ProfilePage() {
         <>
           <p className="mb-2">
             <strong>名前:</strong> {user.name}
+          </p>
+          <p className="mb-2">
+            <strong>所属学校:</strong> {user.school_name ?? "未設定"}
           </p>
           <p className="mb-4">
             <strong>自己紹介:</strong> {user.introduce ?? "未設定"}
