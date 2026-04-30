@@ -65,6 +65,17 @@ const fetcher = async (url: string) => {
   return res.json();
 };
 
+const authFetcher = async (url: string) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("not authenticated");
+  const idToken = await user.getIdToken();
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+  return res.json();
+};
+
 // ----------------------
 // Main Component
 // ----------------------
@@ -119,10 +130,10 @@ export default function Main() {
   );
   const schools: School[] = schoolData?.schools ?? [];
 
-  // ✅ トピック一覧（キャッシュされる）
+  // ✅ トピック一覧（ログイン後のみ、認証ヘッダー付きで取得）
   const { data: topicData, isLoading: loadingTopics, mutate } = useSWR(
-    `${API_BASE_URL}/topics?page=${currentPage}`,
-    fetcher
+    currentUser ? `${API_BASE_URL}/topics?page=${currentPage}` : null,
+    authFetcher
   );
   const results: Topic[] = topicData?.topics ?? [];
   const totalPages = Math.max(topicData?.totalPages ?? 1, 1);

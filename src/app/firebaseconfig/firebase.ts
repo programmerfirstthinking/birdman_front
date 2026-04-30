@@ -25,6 +25,17 @@
 // };
 
 
+// export const firebaseConfig = {
+//   apiKey: "AIzaSyCUvqt8c4KYiUlj62_1EEqRymWD1nFBygg",
+//   authDomain: "birdmanweb-2d750.firebaseapp.com",
+//   projectId: "birdmanweb-2d750",
+//   storageBucket: "birdmanweb-2d750.firebasestorage.app",
+//   messagingSenderId: "628017139067",
+//   appId: "1:628017139067:web:26589463eee87d4b1301de",
+//   measurementId: "G-GSSBEQBLYR"
+// };
+
+
 export const firebaseConfig = {
   apiKey: "AIzaSyCUvqt8c4KYiUlj62_1EEqRymWD1nFBygg",
   authDomain: "birdmanweb-2d750.firebaseapp.com",
