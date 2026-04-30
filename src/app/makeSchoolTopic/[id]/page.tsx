@@ -30,17 +30,20 @@ const MarkdownImageUploader: React.FC = () => {
     storageKey: string; // DB 保存用（プロバイダー非依存パス）
   };
 
+  type UploadedPdf = { url: string; key: string };
+
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [markdown, setMarkdown] = useState<string>("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [sending, setSending] = useState<boolean>(false);
   const [groupId, setGroupId] = useState<number | null>(null);
   const [contentName, setContentName] = useState<string>("");
-  // PDF: プレビュー用 URL とバックエンド送信用キーを分けて管理
-  const [pdfUrl, setPdfUrl] = useState<string>("");
-  const [pdfKey, setPdfKey] = useState<string>("");
+  const [pdfs, setPdfs] = useState<UploadedPdf[]>([]);
   const [uploadingPdf, setUploadingPdf] = useState<boolean>(false);
   const [uploadingImage, setUploadingImage] = useState<boolean>(false);
+
+  const MAX_IMAGES = 4;
+  const MAX_PDFS = 2;
 
   // URLから groupId を取得
   useEffect(() => {
@@ -51,7 +54,11 @@ const MarkdownImageUploader: React.FC = () => {
   }, []);
 
   const handleImageUpload = async (file: File) => {
-    const MAX_SIZE = 5 * 1024 * 1024; // 圧縮前の元ファイルは5MBまで許容
+    if (images.length >= MAX_IMAGES) {
+      alert(`画像は最大${MAX_IMAGES}枚までです。`);
+      return;
+    }
+    const MAX_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       alert("画像は5MB以下にしてください。");
       return;
@@ -61,13 +68,11 @@ const MarkdownImageUploader: React.FC = () => {
 
     try {
       setUploadingImage(true);
-      // Firebase 送信前に WebP 圧縮してデータ量を削減
       const compressed = await compressForUpload(file);
       await uploadBytes(storageRef, compressed, {
         contentType: "image/webp",
         cacheControl: "public, max-age=31536000, immutable",
       });
-      // 同じ圧縮済み blob でキャッシュをプレウォーム（getDownloadURL 不要）
       const previewUrl = await prewarmImageCache(storageRef.fullPath, compressed);
       setImages((prev) => [...prev, { name: file.name, url: previewUrl, storageKey: storageRef.fullPath }]);
     } catch (err) {
@@ -109,8 +114,8 @@ const MarkdownImageUploader: React.FC = () => {
       alert("PDFファイルのみアップロード可能です。");
       return;
     }
-    if (pdfKey) {
-      alert("すでにPDFがアップロードされています。削除してから再アップロードしてください。");
+    if (pdfs.length >= MAX_PDFS) {
+      alert(`PDFは最大${MAX_PDFS}件までです。`);
       return;
     }
     const MAX_SIZE = 10 * 1024 * 1024;
@@ -127,8 +132,7 @@ const MarkdownImageUploader: React.FC = () => {
         cacheControl: "public, max-age=31536000, immutable",
       });
       const url = await getDownloadURL(storageRef);
-      setPdfUrl(url);
-      setPdfKey(storageRef.fullPath);
+      setPdfs((prev) => [...prev, { url, key: storageRef.fullPath }]);
       alert("PDFアップロード成功！");
     } catch (err) {
       console.error(err);
@@ -138,13 +142,10 @@ const MarkdownImageUploader: React.FC = () => {
     }
   };
 
-  const handlePdfDelete = async () => {
-    if (!pdfKey) return;
+  const handlePdfDelete = async (key: string) => {
     try {
-      await deleteObject(ref(storage, pdfKey));
-      setPdfUrl("");
-      setPdfKey("");
-      alert("PDFを削除しました");
+      await deleteObject(ref(storage, key));
+      setPdfs((prev) => prev.filter((p) => p.key !== key));
     } catch (err) {
       console.error(err);
       alert("PDFの削除に失敗しました");
@@ -197,7 +198,7 @@ const MarkdownImageUploader: React.FC = () => {
         contentName,
         content: markdown,
         imageKeys: images.map((img) => img.storageKey),
-        pdfKeys: pdfKey ? [pdfKey] : [],
+        pdfKeys: pdfs.map((p) => p.key),
       };
 
       const response = await fetch(`${API_BASE_URL}/make_grouptopic`, {
@@ -215,8 +216,7 @@ const MarkdownImageUploader: React.FC = () => {
       setImages([]);
       setMarkdown("");
       setContentName("");
-      setPdfUrl("");
-      setPdfKey("");
+      setPdfs([]);
       const schoolIdParam = searchParams.get("schoolId");
       const schoolId = schoolIdParam ? Number(schoolIdParam) : NaN;
       if (!Number.isNaN(schoolId)) {
@@ -343,29 +343,36 @@ const MarkdownImageUploader: React.FC = () => {
             onDragOver={handlePdfDragOver}
             className="p-4 text-center border-2 border-dashed border-blue-300 rounded-xl bg-blue-50 hover:bg-blue-100 transition"
           >
-            <p className="text-blue-700 mb-2">📄 PDFアップロード</p>
+            <p className="text-blue-700 mb-1">📄 PDFアップロード</p>
+            <p className="text-xs text-blue-500 mb-2">{pdfs.length}/{MAX_PDFS}件</p>
 
-            <label className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-700">
+            <label className={`inline-block text-white px-4 py-2 rounded-lg transition ${pdfs.length >= MAX_PDFS || sending ? "bg-blue-300 cursor-not-allowed" : "bg-blue-600 cursor-pointer hover:bg-blue-700"}`}>
               ファイル選択
               <input
                 type="file"
                 accept="application/pdf"
                 style={{ display: "none" }}
                 onChange={handlePdfSelect}
-                disabled={sending}
+                disabled={sending || pdfs.length >= MAX_PDFS}
               />
             </label>
 
-            {pdfKey && (
-              <div className="mt-3 flex justify-between items-center bg-blue-100 p-2 rounded">
-                <span className="text-sm text-blue-700">アップロード済み</span>
-                <button
-                  onClick={handlePdfDelete}
-                  disabled={sending}
-                  className="px-2 py-1 bg-red-500 text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  削除
-                </button>
+            {pdfs.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {pdfs.map((pdf) => (
+                  <div key={pdf.key} className="flex justify-between items-center bg-blue-100 p-2 rounded">
+                    <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-700 underline truncate mr-2">
+                      {pdf.key.split("/").pop()}
+                    </a>
+                    <button
+                      onClick={() => handlePdfDelete(pdf.key)}
+                      disabled={sending}
+                      className="px-2 py-1 bg-red-500 text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                    >
+                      削除
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -411,18 +418,22 @@ const MarkdownImageUploader: React.FC = () => {
             </ReactMarkdown>
           </div>
 
-          {pdfUrl && (
-            <div className="mt-4 flex items-center gap-2 p-3 border border-blue-200 rounded-lg bg-blue-100">
-              <span className="text-2xl">📄</span>
-              <span className="flex-1 text-blue-700">PDFファイル</span>
-              <a
-                href={pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-2 py-1 bg-blue-600 text-white rounded text-sm"
-              >
-                ダウンロード
-              </a>
+          {pdfs.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {pdfs.map((pdf) => (
+                <div key={pdf.key} className="flex items-center gap-2 p-3 border border-blue-200 rounded-lg bg-blue-100">
+                  <span className="text-2xl">📄</span>
+                  <span className="flex-1 text-blue-700 truncate">{pdf.key.split("/").pop()}</span>
+                  <a
+                    href={pdf.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2 py-1 bg-blue-600 text-white rounded text-sm shrink-0"
+                  >
+                    ダウンロード
+                  </a>
+                </div>
+              ))}
             </div>
           )}
         </div>

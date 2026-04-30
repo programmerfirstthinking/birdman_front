@@ -4,7 +4,7 @@ import { ParamValue } from "next/dist/server/request/params";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 // import { initializeApp } from "firebase/app";
-import { getAuth,onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, reload } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { API_BASE_URL } from "../../api/api";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
@@ -22,7 +22,7 @@ import Link from "next/link"
 // };
 
 // 既存の app があるか確認
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+!getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 
 
@@ -135,10 +135,6 @@ export default function Page() {
       return user ? user.school_name || "不明な学校" : "不明な学校";
     }
 
-    function getUserSchoolId(userID: number) {
-      const user = users.find((u) => u.id === userID);
-      return user ? user.school_id : null;
-    }
 
 
   useEffect(() => {
@@ -196,11 +192,6 @@ export default function Page() {
       }
 
       const data = await response.json();
-
-      console.log("これがレスポンスです");
-      console.log(data);
-      console.log(data.comments);
-
       setComments(data.comments);
         setTopicComment("");
 
@@ -246,6 +237,15 @@ return (
   <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 font-sans flex justify-center">
     <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg p-6">
 
+      <div className="w-full flex justify-start">
+        <button
+          onClick={() => router.push("/topic")}
+          className="mb-6 px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+        >
+          ← ホームに戻る
+        </button>
+      </div>
+
       {/* トピック */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-blue-800 mb-4">トピック情報</h2>
@@ -253,12 +253,20 @@ return (
         <div className="mb-3">
           <h4 className="text-blue-700 font-semibold">題名</h4>
           {isEditing ? (
-            <input
-              type="text"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              className="w-full p-2 border border-blue-300 rounded-lg"
-            />
+            <>
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value.slice(0, 50))}
+                maxLength={50}
+                className="w-full p-2 border border-blue-300 rounded-lg"
+              />
+              <div className="text-right mt-1">
+                <span className={`text-xs ${editTitle.length >= 50 ? "text-red-500 font-semibold" : editTitle.length >= 40 ? "text-yellow-500" : "text-gray-400"}`}>
+                  {editTitle.length}/50
+                </span>
+              </div>
+            </>
           ) : (
             <div className="text-blue-800 font-medium">{results?.TopicName}</div>
           )}
@@ -267,11 +275,19 @@ return (
         <div className="mb-3">
           <h4 className="text-blue-700 font-semibold">内容</h4>
           {isEditing ? (
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              className="w-full h-32 p-2 border border-blue-300 rounded-lg resize-none"
-            />
+            <>
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value.slice(0, 2000))}
+                maxLength={2000}
+                className="w-full h-32 p-2 border border-blue-300 rounded-lg resize-none"
+              />
+              <div className="text-right mt-1">
+                <span className={`text-xs ${editContent.length >= 2000 ? "text-red-500 font-semibold" : editContent.length >= 1800 ? "text-yellow-500" : "text-gray-400"}`}>
+                  {editContent.length}/2000
+                </span>
+              </div>
+            </>
           ) : (
             <div className="text-blue-800 whitespace-pre-line">
               {results?.Content}
@@ -347,13 +363,13 @@ return (
                 return;
               }
 
-              if (trimmedEditTitle.length > 100) {
-                alert("トピック名は 100 文字以内で入力してください");
+              if (trimmedEditTitle.length > 50) {
+                alert("トピック名は 50 文字以内で入力してください");
                 return;
               }
 
-              if (trimmedEditContent.length > 5000) {
-                alert("内容は 5000 文字以内で入力してください");
+              if (trimmedEditContent.length > 2000) {
+                alert("内容は 2000 文字以内で入力してください");
                 return;
               }
 
@@ -382,7 +398,8 @@ return (
               setIsEditing(false);
               GetTopicdata(id);
             }}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg"
+            disabled={!editTitle.trim() || !editContent.trim() || editTitle.length > 50 || editContent.length > 2000}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             保存
           </button>

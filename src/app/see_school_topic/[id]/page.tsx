@@ -120,8 +120,13 @@ export default function SchoolsPage() {
     e.stopPropagation();
     if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
 
+    if (images.length >= 4) {
+      alert("画像は最大4枚までです。");
+      return;
+    }
+
     const file = e.dataTransfer.files[0];
-    const MAX_SIZE = 5 * 1024 * 1024; // 圧縮前の元ファイルは5MBまで許容
+    const MAX_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       alert("画像は5MB以下にしてください。");
       return;
@@ -174,6 +179,10 @@ export default function SchoolsPage() {
   const handlePdfUpload = async (file: File) => {
     if (file.type !== "application/pdf") {
       alert("PDFファイルのみアップロード可能です。");
+      return;
+    }
+    if (pdfs.length >= 2) {
+      alert("PDFは最大2件までです。");
       return;
     }
     const MAX_SIZE = 10 * 1024 * 1024;
@@ -329,7 +338,13 @@ export default function SchoolsPage() {
     try {
       const idToken = await currentUser.getIdToken();
 
-      // storage_key を使って Firebase Storage から削除（URL パース不要）
+      // DB を先に削除し、成功後に Storage を削除する（順序逆だと不整合が残る）
+      const res = await fetch(`${API_BASE_URL}/group_contents/${contentId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (!res.ok) throw new Error("グループコンテンツ削除に失敗しました");
+
       const allKeys = [
         ...getServerImageKeys(responseData.data),
         ...getServerPdfKeys(responseData.data),
@@ -341,12 +356,6 @@ export default function SchoolsPage() {
           console.error("ストレージ削除失敗:", err);
         }
       }
-
-      const res = await fetch(`${API_BASE_URL}/group_contents/${contentId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
-      if (!res.ok) throw new Error("グループコンテンツ削除に失敗しました");
 
       alert("グループコンテンツを削除しました");
       window.location.href = "/schools";
@@ -379,9 +388,9 @@ export default function SchoolsPage() {
           <div className="flex items-center gap-4">
             <a
               href="/schools"
-              className="text-blue-600 hover:text-blue-800 font-semibold"
+              className="px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
             >
-              ← ホーム
+              ← 学校一覧に戻る
             </a>
             <h2 className="text-2xl font-bold text-blue-800">
               {isEditing ? "コンテンツを編集" : "スクールトピック詳細"}
