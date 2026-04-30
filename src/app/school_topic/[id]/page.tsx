@@ -106,6 +106,7 @@ const fetchGroupsFetcher = async (
     groups: groupedData,
     backendSchoolId: data.schoolID || null,
     loginUserId: data.userID ?? null,
+    isAdmin: data.is_admin === true,
   };
 };
 
@@ -159,6 +160,7 @@ export default function CreateGroup() {
   const groups = data?.groups ?? [];
   const backendSchoolId = data?.backendSchoolId ?? null;
   const loginUserId = data?.loginUserId ?? null;
+  const isAdmin = data?.isAdmin ?? false;
   const fetchingGroups = isLoading;
   const canManageCurrentSchool =
     backendSchoolId !== null && schoolId !== null && backendSchoolId === schoolId;
@@ -339,7 +341,7 @@ export default function CreateGroup() {
                     key={g.id}
                     className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition"
                   >
-                    {editingGroupId === g.id && canManageCurrentSchool && loginUserId === g.userId ? (
+                    {editingGroupId === g.id && (isAdmin || (canManageCurrentSchool && loginUserId === g.userId)) ? (
                       <div className="flex gap-3 mb-4">
                         <input
                           type="text"
@@ -383,7 +385,7 @@ export default function CreateGroup() {
               
                       )} */}
 
-                      {canManageCurrentSchool && loginUserId === g.userId && editingGroupId !== g.id && (
+                      {(isAdmin || (canManageCurrentSchool && loginUserId === g.userId)) && editingGroupId !== g.id && (
                         <div className="flex gap-2">
                           <button
                             onClick={() => { setEditingGroupId(g.id); setEditingGroupName(g.groupName); }}

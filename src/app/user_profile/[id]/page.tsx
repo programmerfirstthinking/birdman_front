@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import { getApps, initializeApp } from "firebase/app";
 import { firebaseConfig } from "../../firebaseconfig/firebase";
 import { API_BASE_URL } from "../../api/api";
@@ -14,6 +14,8 @@ type UserProfile = {
   name: string;
   school_name: string | null;
   introduce: string | null;
+  is_admin: boolean;
+  viewer_id: number;
 };
 
 export default function UserProfilePage() {
@@ -23,10 +25,13 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
       if (!user) {
         router.replace("/signup");
         return;
@@ -35,23 +40,53 @@ export default function UserProfilePage() {
         setLoading(false);
         return;
       }
-      fetch(`${API_BASE_URL}/user_profile/${id}`)
-        .then((res) => {
-          if (!res.ok) throw new Error("ユーザーが見つかりません");
-          return res.json();
+
+      user.getIdToken().then((idToken) => {
+        fetch(`${API_BASE_URL}/user_profile/${id}`, {
+          headers: { Authorization: `Bearer ${idToken}` },
         })
-        .then((data: UserProfile) => {
-          setProfile(data);
-        })
-        .catch((err) => {
-          setError(err.message);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+          .then((res) => {
+            if (!res.ok) throw new Error("ユーザーが見つかりません");
+            return res.json();
+          })
+          .then((data: UserProfile) => {
+            setProfile(data);
+          })
+          .catch((err) => {
+            setError(err.message);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      });
     });
     return () => unsubscribe();
   }, [id, router]);
+
+  const handleDelete = async () => {
+    if (!profile || !currentUser) return;
+    if (!confirm(`「${profile.name}」のアカウントを削除しますか？この操作は取り消せません。`)) return;
+
+    setDeleting(true);
+    try {
+      const idToken = await currentUser.getIdToken();
+      const res = await fetch(`${API_BASE_URL}/deleteUser/${profile.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "削除に失敗しました");
+      }
+      alert("ユーザーを削除しました");
+      router.push("/topic");
+    } catch (err: any) {
+      console.error(err);
+      alert(`エラー: ${err.message}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -68,6 +103,8 @@ export default function UserProfilePage() {
       </div>
     );
   }
+
+  const canDelete = profile.is_admin && profile.viewer_id !== profile.id;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 flex flex-col items-center font-sans">
@@ -93,12 +130,24 @@ export default function UserProfilePage() {
           </div>
         </div>
 
-        <button
-          onClick={() => window.history.back()}
-          className="mt-8 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm transition"
-        >
-          ← 戻る
-        </button>
+        <div className="mt-8 flex items-center gap-4">
+          <button
+            onClick={() => window.history.back()}
+            className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm transition"
+          >
+            ← 戻る
+          </button>
+
+          {canDelete && (
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {deleting ? "削除中..." : "ユーザーを削除"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

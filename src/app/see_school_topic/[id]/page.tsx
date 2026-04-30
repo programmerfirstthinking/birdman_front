@@ -37,6 +37,7 @@ type ApiResponse = {
   data: GroupContent;
   current_user?: { id: number };
   owner_name?: string;
+  is_admin?: boolean;
 };
 
 // 画像: プレビュー用 URL + バックエンド送信用キー
@@ -70,6 +71,7 @@ export default function SchoolsPage() {
   const [uploadingPdf, setUploadingPdf] = useState<boolean>(false);
   const [uploadingImage, setUploadingImage] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const auth = getAuth(app);
 
@@ -90,6 +92,7 @@ export default function SchoolsPage() {
 
       const data: ApiResponse = await res.json();
       setResponseData(data);
+      setIsAdmin(data.is_admin === true);
     } catch (err: any) {
       console.error("Fetch エラー:", err.message);
       alert("データ取得に失敗しました");
@@ -396,7 +399,7 @@ export default function SchoolsPage() {
               {isEditing ? "コンテンツを編集" : "スクールトピック詳細"}
             </h2>
           </div>
-          {responseData.current_user?.id === responseData.data.user_id && !isEditing && (
+          {(isAdmin || responseData.current_user?.id === responseData.data.user_id) && !isEditing && (
             <div>
               <button
                 onClick={enterEditMode}

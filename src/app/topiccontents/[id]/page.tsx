@@ -45,6 +45,7 @@ export default function Page() {
   };
 
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   type UserInfo = {
     id: number;
@@ -116,6 +117,7 @@ export default function Page() {
         setResults(data.topicinfo);
         setUsers(data.users ?? []);
         setCurrentUser(data.currentuser);
+        setIsAdmin(data.is_admin === true);
 
         const owner = data.users?.find((u: UserInfo) => u.id === data.topicinfo?.UserID) ?? null;
         setTopicOwner(owner);
@@ -305,7 +307,7 @@ return (
           </div>
         </div>
 
-        {currentUser && results?.UserID === currentUser.id && !isEditing && (
+        {currentUser && (isAdmin || results?.UserID === currentUser.id) && !isEditing && (
           <div className="flex gap-2">
             <button
               onClick={() => {
@@ -480,7 +482,7 @@ return (
 
                   {/* 左：操作 */}
                   <div>
-                    {currentUser && comment.UserID === currentUser.id && (
+                    {currentUser && (isAdmin || comment.UserID === currentUser.id) && (
                       <div className="flex gap-2">
                         <button
                           onClick={() => {
