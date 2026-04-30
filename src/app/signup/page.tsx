@@ -1,10 +1,3 @@
-
-
-
-
-
-
-
 // // リロードしたらしっかり動く
 "use client";
 
@@ -171,51 +164,155 @@ export default function LoginPage() {
 
   const isFormValid = name && bio && schoolId && password;
 
+
   return (
-    <div style={{
+  <div
+    style={{
+      minHeight: "100vh",
+      background: "linear-gradient(to bottom right, #e0f2fe, #f8fafc)",
       display: "flex",
-      flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      minHeight: "100vh",
-      backgroundColor: "#f0f4f8",
+      padding: "24px",
       fontFamily: "Arial, sans-serif",
-      padding: "20px",
-    }}>
-      <h1 style={{ fontSize: "2rem", marginBottom: "20px" }}>Birdman Webへようこそ</h1>
-
-      <div style={{
-        backgroundColor: "white",
-        padding: "30px",
-        borderRadius: "10px",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+    }}
+  >
+    <div
+      style={{
         width: "100%",
-        maxWidth: "400px",
+        maxWidth: "480px",
+        backgroundColor: "white",
+        borderRadius: "18px",
+        padding: "36px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
         display: "flex",
         flexDirection: "column",
-        gap: "15px"
-      }}>
+        gap: "22px",
+      }}
+    >
+      <div style={{ textAlign: "center" }}>
+        <h1
+          style={{
+            fontSize: "2rem",
+            marginBottom: "8px",
+            color: "#1e293b",
+          }}
+        >
+          Birdman Web
+        </h1>
+
+        <div
+          style={{
+            fontSize: "1rem",
+            color: "#64748b",
+          }}
+        >
+          ユーザー登録
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <label
+          style={{
+            fontWeight: "bold",
+            color: "#334155",
+            fontSize: "0.95rem",
+          }}
+        >
+          名前
+        </label>
+
         <input
           type="text"
           placeholder="名前"
           value={name}
           onChange={e => setName(e.target.value)}
           maxLength={10}
-          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
+          style={{
+            padding: "12px",
+            borderRadius: "10px",
+            border: "1px solid #cbd5e1",
+            fontSize: "1rem",
+            outline: "none",
+          }}
         />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <label
+          style={{
+            fontWeight: "bold",
+            color: "#334155",
+            fontSize: "0.95rem",
+          }}
+        >
+          自己紹介
+        </label>
+
+        <div
+          style={{
+            fontSize: "0.85rem",
+            color: "#64748b",
+            lineHeight: "1.5",
+          }}
+        >
+          チーム名、何代、所属班、Twitterのリンクなどを書くと良いでしょう
+        </div>
 
         <textarea
-          placeholder="自己紹介"
+          placeholder="自己紹介 (30文字以内)"
           value={bio}
           onChange={e => setBio(e.target.value)}
           maxLength={30}
-          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc", resize: "none" }}
+          style={{
+            padding: "12px",
+            borderRadius: "10px",
+            border: "1px solid #cbd5e1",
+            resize: "none",
+            minHeight: "90px",
+            fontSize: "1rem",
+            outline: "none",
+          }}
         />
+      </div>
+
+      
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <label
+          style={{
+            fontWeight: "bold",
+            color: "#334155",
+            fontSize: "0.95rem",
+          }}
+        >
+          学校選択
+        </label>
+
+        <div
+        style={{
+          backgroundColor: "#f8fafc",
+          border: "1px solid #e2e8f0",
+          borderRadius: "10px",
+          padding: "14px",
+          fontSize: "0.85rem",
+          color: "#475569",
+          lineHeight: "1.6",
+        }}
+      >
+        自身の所属チームが存在しない場合、お手数ですがユーザー登録をせずにDMにてお知らせください。
+      </div>
 
         <select
           value={schoolId}
-          onChange={e => setSchoolId(e.target.value)} // ← 文字列のまま保持
-          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
+          onChange={e => setSchoolId(e.target.value)}
+          style={{
+            padding: "12px",
+            borderRadius: "10px",
+            border: "1px solid #cbd5e1",
+            backgroundColor: "white",
+            fontSize: "1rem",
+          }}
         >
           <option value="">学校を選択してください</option>
           {schools.map(s => (
@@ -224,6 +321,18 @@ export default function LoginPage() {
             </option>
           ))}
         </select>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <label
+          style={{
+            fontWeight: "bold",
+            color: "#334155",
+            fontSize: "0.95rem",
+          }}
+        >
+          パスワード
+        </label>
 
         <input
           type="password"
@@ -231,27 +340,40 @@ export default function LoginPage() {
           value={password}
           onChange={e => setPassword(e.target.value)}
           maxLength={20}
-          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
-        />
-
-        <button
-          onClick={handleGoogleLogin}
-          disabled={!isFormValid}
           style={{
             padding: "12px",
-            borderRadius: "5px",
-            border: "none",
-            backgroundColor: isFormValid ? "#3b82f6" : "#93c5fd",
-            color: "white",
-            fontWeight: "bold",
-            cursor: isFormValid ? "pointer" : "not-allowed",
+            borderRadius: "10px",
+            border: "1px solid #cbd5e1",
+            fontSize: "1rem",
+            outline: "none",
           }}
-        >
-          Googleでログイン
-        </button>
+        />
       </div>
+
+      <button
+        onClick={handleGoogleLogin}
+        disabled={!isFormValid}
+        style={{
+          marginTop: "8px",
+          padding: "14px",
+          borderRadius: "10px",
+          border: "none",
+          backgroundColor: isFormValid ? "#2563eb" : "#93c5fd",
+          color: "white",
+          fontWeight: "bold",
+          fontSize: "1rem",
+          cursor: isFormValid ? "pointer" : "not-allowed",
+          transition: "0.2s",
+          boxShadow: isFormValid
+            ? "0 4px 10px rgba(37,99,235,0.25)"
+            : "none",
+        }}
+      >
+        Googleでログイン
+      </button>
     </div>
-  );
+  </div>
+);
 }
 
 

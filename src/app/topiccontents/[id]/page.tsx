@@ -298,13 +298,70 @@ return (
         </div>
 
         {/* ✅ 右寄せ修正ここ */}
-        <div className="mb-3 text-sm text-blue-600 flex flex-col items-end text-right">
+        {/* <div className="mb-3 text-sm text-blue-600 flex flex-col items-end text-right">
           <div>
-            投稿者: {topicOwner?.name ?? getUserName(results?.UserID ?? 0)}
+            投稿者:{" "}
+            <Link
+              href={`/user_profile/${results?.UserID}`}
+              className="hover:underline hover:text-blue-800 font-medium"
+            >
+              {topicOwner?.name ?? getUserName(results?.UserID ?? 0)}
+            </Link>
           </div>
           <div>
             学校: {topicOwner?.school_name ?? getUserSchoolName(results?.UserID ?? 0)}
           </div>
+        </div> */}
+
+        {/* ✅ 右寄せ修正ここ */}
+        {/* <div className="mb-3 text-sm text-blue-600 flex flex-col items-end text-right">
+          <div>
+            投稿者:{" "}
+            <Link
+              href={`/user_profile/${results?.UserID}`}
+              className="
+                font-medium
+                cursor-pointer
+                hover:underline
+                underline-offset-4
+                hover:text-blue-800
+                transition
+              "
+            >
+              {topicOwner?.name ?? getUserName(results?.UserID ?? 0)}
+            </Link>
+          </div>
+
+          <div>
+            学校: {topicOwner?.school_name ?? getUserSchoolName(results?.UserID ?? 0)}
+          </div>
+        </div> */}
+
+        {/* ✅ 右寄せ修正ここ */}
+        <div className="mb-3 text-sm text-blue-600 flex flex-col items-end text-right">
+
+          <div>
+            <Link
+              href={`/user_profile/${results?.UserID}`}
+              className="
+                inline-block
+                font-medium
+                cursor-pointer
+                hover:underline
+                underline-offset-4
+                hover:text-blue-800
+                transition
+              "
+            >
+              投稿者:{" "}
+              {topicOwner?.name ?? getUserName(results?.UserID ?? 0)}
+            </Link>
+          </div>
+
+          <div>
+            学校: {topicOwner?.school_name ?? getUserSchoolName(results?.UserID ?? 0)}
+          </div>
+
         </div>
 
         {currentUser && (isAdmin || results?.UserID === currentUser.id) && !isEditing && (
