@@ -13,9 +13,15 @@ type UserProfile = {
   id: number;
   name: string;
   school_name: string | null;
+  school_id: number | null;
   introduce: string | null;
   is_admin: boolean;
   viewer_id: number;
+};
+
+type School = {
+  ID: number;
+  SchoolName: string;
 };
 
 export default function UserProfilePage() {
@@ -27,6 +33,9 @@ export default function UserProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
+  const [savingSchool, setSavingSchool] = useState(false);
 
   useEffect(() => {
     const auth = getAuth(app);
@@ -51,13 +60,16 @@ export default function UserProfilePage() {
           })
           .then((data: UserProfile) => {
             setProfile(data);
+            setSelectedSchoolId(data.school_id != null ? String(data.school_id) : "");
+            if (data.is_admin) {
+              fetch(`${API_BASE_URL}/schools_list`)
+                .then((r) => r.json())
+                .then((s: School[]) => setSchools(s))
+                .catch(() => {});
+            }
           })
-          .catch((err) => {
-            setError(err.message);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
+          .catch((err) => setError(err.message))
+          .finally(() => setLoading(false));
       });
     });
     return () => unsubscribe();
@@ -81,10 +93,34 @@ export default function UserProfilePage() {
       alert("ユーザーを削除しました");
       router.push("/topic");
     } catch (err: any) {
-      console.error(err);
       alert(`エラー: ${err.message}`);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleSaveSchool = async () => {
+    if (!profile || !currentUser) return;
+    setSavingSchool(true);
+    try {
+      const idToken = await currentUser.getIdToken();
+      const schoolIdValue = selectedSchoolId !== "" ? Number(selectedSchoolId) : null;
+      const res = await fetch(`${API_BASE_URL}/updateUserSchoolID`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ id: profile.id, school_id: schoolIdValue }),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "更新に失敗しました");
+      }
+      const schoolName = schools.find((s) => s.ID === schoolIdValue)?.SchoolName ?? null;
+      setProfile((prev) => prev ? { ...prev, school_name: schoolName, school_id: schoolIdValue } : prev);
+      alert("学校を更新しました");
+    } catch (err: any) {
+      alert(`エラー: ${err.message}`);
+    } finally {
+      setSavingSchool(false);
     }
   };
 
@@ -104,7 +140,7 @@ export default function UserProfilePage() {
     );
   }
 
-  const canDelete = profile.is_admin && profile.viewer_id !== profile.id;
+  const canManage = profile.is_admin && profile.viewer_id !== profile.id;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-6 flex flex-col items-center font-sans">
@@ -119,7 +155,29 @@ export default function UserProfilePage() {
 
           <div className="border-b border-blue-100 pb-4">
             <p className="text-xs text-blue-500 mb-1">学校</p>
-            <p className="text-blue-800">{profile.school_name ?? "未設定"}</p>
+            {canManage ? (
+              <div className="flex gap-2 items-center mt-1">
+                <select
+                  value={selectedSchoolId}
+                  onChange={(e) => setSelectedSchoolId(e.target.value)}
+                  className="flex-1 p-2 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="">未設定</option>
+                  {schools.map((s) => (
+                    <option key={s.ID} value={String(s.ID)}>{s.SchoolName}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleSaveSchool}
+                  disabled={savingSchool}
+                  className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition disabled:opacity-50"
+                >
+                  {savingSchool ? "保存中..." : "変更"}
+                </button>
+              </div>
+            ) : (
+              <p className="text-blue-800">{profile.school_name ?? "未設定"}</p>
+            )}
           </div>
 
           <div>
@@ -138,7 +196,7 @@ export default function UserProfilePage() {
             ← 戻る
           </button>
 
-          {canDelete && (
+          {canManage && (
             <button
               onClick={handleDelete}
               disabled={deleting}
